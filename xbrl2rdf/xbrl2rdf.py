@@ -1,5 +1,8 @@
 """Main module."""
-#test commit
+import tkinter as tk
+from tkinter import filedialog
+from tkinter import ttk
+from tkinter import messagebox
 import sys
 import click
 from io import StringIO, BytesIO
@@ -28,14 +31,17 @@ taxo_choices: str = "\n".join([str(idx)+": "+str(item['name']) for idx, item in 
 
 
 @click.command()
-@click.option('--url', default=join("data", "instances", "qrs_240_instance.xbrl"), prompt="input file")
+#@click.option('--url', default=join("data", "instances", "qrs_240_instance.xbrl"), prompt="input file")
 @click.option('--taxo', default=2, prompt=taxo_choices)
-@click.option('--output', default=join("data", "rdf"), prompt="output directory")
+#@click.option('--output', default=join("data", "rdf"), prompt="output directory")
 @click.option('--output_format', default=1, prompt="1: rdf-turtle\n2: rdf-star-turtle\n")
 
-
-def main(url: str, taxo: int, output: str, output_format: int) -> int:
-
+def main(taxo: int, output_format: int) -> int:
+    #get input here
+    url = tk.filedialog.askopenfilename(title = 'Select input file')
+    print('url', url)
+    output = tk.filedialog.askdirectory(title = 'Select output directory')
+    print('output dir', output)
     log_file: str = join(output, "".join(os.path.basename(url).split(".")[0:-1])+".log")
     logging.basicConfig(filename=log_file, level=logging.DEBUG, filemode="w")
 
@@ -117,7 +123,6 @@ def main(url: str, taxo: int, output: str, output_format: int) -> int:
                                     "http://www.xbrl.org/2003/linkbase"]
 
     # utilfunctions.printNamespaces(params)
-
     res = parse_xbrl(url, params)
     if res:
         logging.warning("WARNING: "+str(params['errorCount'])+" error(s) found when importing "+url)
