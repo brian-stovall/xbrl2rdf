@@ -114,7 +114,7 @@ def processContext(context: etree._Element, params: dict) -> int:
                          '"^^xsd:date; ]\n')
             period_child = period_child.getnext()
         output.write("        ).\n\n")
-   
+
     return 0
 
 
@@ -140,14 +140,14 @@ def getContextIdentifier(context: etree._Element, params: dict) -> etree._Elemen
 
 
 def getContextSegment(context: etree._Element, params: dict) -> etree._Element:
-    for node in context:
+    for node in context.iter():
         if etree.QName(node).localname == "segment":
             return node
     return None
 
 
 def getContextScenario(context: etree._Element, params: dict) -> etree._Element:
-    for node in context:
+    for node in context.iter():
         if etree.QName(node).localname == "scenario":
             return node
     return None
