@@ -61,12 +61,22 @@ def processContext(context: etree._Element, params: dict) -> int:
     # scheme = identifier.attrib.get('scheme', None)
 
     # entity element has optional segment
-    segment = getContextSegment(context, params)
-    if segment is not None:
-        if len(segment) == 1:
-            segment = segment[0]
-        xml = segment.text
-        output.write('        xbrli:segment ' + xml + '\n')
+    segmentData = getContextSegment(context, params)
+    if segmentData is not None:
+        dimension, tag, value = segmentData
+        output.write('        xbrli:segment [\n')
+        if tag is None:
+            output.write('            xbrldi:explicitMember [\n')
+            output.write('                _:dimension=' + dimension + ';\n')
+            output.write('                xbrldi:explicitMember='+value+'];\n')
+        else:
+            tagNS = etree.QName(tag).namespace
+            tagQName = etree.QName(tag).localname
+            output.write('            xbrldi:typedMember [\n')
+            output.write('                _:dimension=' + dimension + ';\n')
+            output.write('                _:tag=' +tag+ ';\n')
+            output.write('                xbrldi:typedMember='+value+'];\n')
+        output.write('        ]\n')
 
     context_identifier = getContextIdentifier(context, params)
     context_value = context_identifier.text
@@ -141,7 +151,13 @@ def getContextIdentifier(context: etree._Element, params: dict) -> etree._Elemen
 def getContextSegment(context: etree._Element, params: dict) -> etree._Element:
     for node in context.iter():
         if etree.QName(node).localname == "segment":
-            return node
+            for subnode in node.iter():
+                if etree.QName(subnode).localname == "explicitMember":
+                    return (subnode.get('dimension'), None, subnode.text)
+                elif etree.QName(subnode).localname == "typedMember":
+                    dimension = subnode.get('dimension')
+                    inner = subnode[0]
+                    return (dimension, inner.tag, inner.text)
     return None
 
 
