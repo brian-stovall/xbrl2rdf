@@ -66,8 +66,7 @@ def processContext(context: etree._Element, params: dict) -> int:
         if len(segment) == 1:
             segment = segment[0]
         xml = segment.text
-        output.write('        xbrli:segment """' + xml +
-                     '"""^^rdf:XMLLiteral;\n')
+        output.write('        xbrli:segment ' + xml + '\n')
 
     context_identifier = getContextIdentifier(context, params)
     context_value = context_identifier.text
