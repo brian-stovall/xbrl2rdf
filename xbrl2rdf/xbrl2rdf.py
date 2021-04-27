@@ -36,12 +36,23 @@ taxo_choices: str = "\n".join([str(idx)+": "+str(item['name']) for idx, item in 
 #@click.option('--output', default=join("data", "rdf"), prompt="output directory")
 @click.option('--output_format', default=1, prompt="1: rdf-turtle\n2: rdf-star-turtle\n")
 
-def main(taxo: int, output_format: int) -> int:
-    #get input here
-    url = tk.filedialog.askopenfilename(title = 'Select input file')
-    print('url', url)
+def main(taxo, output_format):
+    extensions_to_process = ['.xbrl']
+    directory = tk.filedialog.askdirectory(title = 'Select input directory')
     output = tk.filedialog.askdirectory(title = 'Select output directory')
-    print('output dir', output)
+    for filename in os.listdir(directory):
+        extension = os.path.splitext(filename)[1]
+        if extension in extensions_to_process:
+            url = os.path.join(directory,filename)
+            print('processing: ', url)
+            go(taxo, output_format, url, output)
+
+def go(taxo: int, output_format: int, url, output) -> int:
+    #get input here
+    #url = tk.filedialog.askopenfilename(title = 'Select input file')
+    #print('url', url)
+    #output = tk.filedialog.askdirectory(title = 'Select output directory')
+    #print('output dir', output)
     log_file: str = join(output, "".join(os.path.basename(url).split(".")[0:-1])+".log")
     logging.basicConfig(filename=log_file, level=logging.DEBUG, filemode="w")
 
