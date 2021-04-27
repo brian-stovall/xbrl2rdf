@@ -70,11 +70,9 @@ def processContext(context: etree._Element, params: dict) -> int:
             output.write('                _:dimension=' + dimension + ';\n')
             output.write('                xbrldi:explicitMember='+value+'];\n')
         else:
-            tagNS = etree.QName(tag).namespace
-            tagQName = etree.QName(tag).localname
             output.write('            xbrldi:typedMember [\n')
             output.write('                _:dimension=' + dimension + ';\n')
-            output.write('                _:tag=' +tag+ ';\n')
+            output.write('                _:tag=' + tag + ';\n')
             output.write('                xbrldi:typedMember="""' + value +
                                   '"""^^rdf:XMLLiteral.];\n')
         output.write('        ]\n')
@@ -158,7 +156,8 @@ def getContextSegment(context: etree._Element, params: dict) -> etree._Element:
                 elif etree.QName(subnode).localname == "typedMember":
                     dimension = subnode.get('dimension')
                     inner = subnode[0]
-                    return (dimension, inner.tag, inner.text)
+                    tagdata = inner.prefix + ":" + etree.QName(inner.tag).localname
+                    return (dimension, tagdata, inner.text)
     return None
 
 
