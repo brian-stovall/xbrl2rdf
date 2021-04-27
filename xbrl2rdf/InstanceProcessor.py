@@ -75,7 +75,8 @@ def processContext(context: etree._Element, params: dict) -> int:
             output.write('            xbrldi:typedMember [\n')
             output.write('                _:dimension=' + dimension + ';\n')
             output.write('                _:tag=' +tag+ ';\n')
-            output.write('                xbrldi:typedMember='+value+'];\n')
+            output.write('                xbrldi:typedMember="""' + value +
+                                  '"""^^rdf:XMLLiteral.];\n')
         output.write('        ]\n')
 
     context_identifier = getContextIdentifier(context, params)
