@@ -30,13 +30,13 @@ manager.save()
 taxo_choices: str = "\n".join([str(idx)+": "+str(item['name']) for idx, item in enumerate(manager.config['packages'])])
 
 
-@click.command()
+#@click.command()
 #@click.option('--url', default=join("data", "instances", "qrs_240_instance.xbrl"), prompt="input file")
-@click.option('--taxo', default=2, prompt=taxo_choices)
+#@click.option('--taxo', default=2, prompt=taxo_choices)
 #@click.option('--output', default=join("data", "rdf"), prompt="output directory")
-@click.option('--output_format', default=1, prompt="1: rdf-turtle\n2: rdf-star-turtle\n")
+#@click.option('--output_format', default=1, prompt="1: rdf-turtle\n2: rdf-star-turtle\n")
 
-def main(taxo, output_format):
+def main():
     extensions_to_process = ['.xbrl']
     directory = tk.filedialog.askdirectory(title = 'Select input directory')
     output = tk.filedialog.askdirectory(title = 'Select output directory')
@@ -45,7 +45,9 @@ def main(taxo, output_format):
         if extension in extensions_to_process:
             url = os.path.join(directory,filename)
             print('processing: ', url)
-            go(taxo, output_format, url, output)
+            #setting the default taxo since isn't used with local files
+            #and ttl rathern than ttl* since those are the options we need
+            go(2, 1, url, output)
 
 def go(taxo: int, output_format: int, url, output) -> int:
     #get input here
