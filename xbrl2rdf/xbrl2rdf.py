@@ -127,6 +127,8 @@ def go(taxo: int, output_format: int, url, output) -> int:
 
     addNamespace("va", "http://xbrl.org/2008/assertion/value", params)
     addNamespace("ea", "http://xbrl.org/2008/assertion/existence", params)
+    addNamespace("xbrl2rdf", "https://github.com/wjwillemse/xbrl2rdf", params)
+
 
     # schemas not to include
     params['namespaces_to_skip'] = ["http://www.xbrl.org/2003/instance",
