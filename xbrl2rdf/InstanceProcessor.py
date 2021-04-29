@@ -138,7 +138,9 @@ def genProvenanceName(base: str, params: dict) -> str:
     name: str = "_:provenance"+str(params['provenanceNumber'])
     output.write("# provenance for facts from same filing\n")
     output.write(name+" \n")
-    output.write('    xl:instance "'+base+'".\n\n')
+    output.write('    xlink:href "'+base+'".\n')
+    filename = base[base.rfind('/') + 1:]
+    output.write('    xl:instance "'+filename+'".\n\n')
     return name
 
 
