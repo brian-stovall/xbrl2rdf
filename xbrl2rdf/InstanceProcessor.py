@@ -64,18 +64,16 @@ def processContext(context: etree._Element, params: dict) -> int:
     segmentData = getContextSegment(context, params)
     if segmentData is not None:
         dimension, tag, value = segmentData
-        output.write('        xbrli:segment [\n')
+        output.write('        xbrl2rdf:dimension [\n')
         if tag is None:
-            output.write('            xbrldi:explicitMember [\n')
-            output.write('                _:dimension=' + dimension + ';\n')
-            output.write('                xbrldi:explicitMember='+value+'];\n')
+            output.write('                xbrldt:dimensionItem ' + dimension + ';\n')
+            output.write('                xbrldi:explicitMember '+value+'];\n')
         else:
-            output.write('            xbrldi:typedMember [\n')
-            output.write('                _:dimension=' + dimension + ';\n')
-            output.write('                _:tag=' + tag + ';\n')
-            output.write('                xbrldi:typedMember="""' + value +
-                                  '"""^^rdf:XMLLiteral.];\n')
-        output.write('        ]\n')
+            output.write('                xbrldt:dimensionItem ' + dimension + ';\n')
+            output.write('                xbrldt:dimension-domain ' + tag + ';\n')
+            output.write('                xbrldi:typedMember """' + value +
+                                  '"""^^rdf:XMLLiteral;] ;\n')
+        #output.write('        ] ; \n')
 
     context_identifier = getContextIdentifier(context, params)
     context_value = context_identifier.text
@@ -138,7 +136,7 @@ def genProvenanceName(base: str, params: dict) -> str:
     name: str = "_:provenance"+str(params['provenanceNumber'])
     output.write("# provenance for facts from same filing\n")
     output.write(name+" \n")
-    output.write('    xlink:href "'+base+'".\n')
+    output.write('    xlink:href "'+base+'";\n')
     filename = base[base.rfind('/') + 1:]
     output.write('    xl:instance "'+filename+'".\n\n')
     return name
