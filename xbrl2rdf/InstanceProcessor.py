@@ -244,14 +244,19 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict) 
     unitRef = fact.attrib.get("unitRef", None)
 
     if unitRef is not None:
-        value = fact.text
-
-        if "." in value:
-            output.write('    rdf:value "' + value +
-                                  '"^^xsd:decimal ;\n')
+        isNil = fact.attrib.get('{http://www.w3.org/2001/XMLSchema-instance}nil', None)
+        #print('sourceline', fact.sourceline, 'attrib', fact.attrib, 'nill?', isNil)
+        #need to check for xsi:nil 'true' attribute, if so, put rdf:nil
+        if isNil:
+            output.write('    rdf:value ' + 'rdf:nil;\n')
         else:
-            output.write('    rdf:value "' + value +
-                                  '"^^xsd:integer ;\n')
+            value = fact.text
+            if "." in value:
+                output.write('    rdf:value "' + value +
+                                      '"^^xsd:decimal ;\n')
+            else:
+                output.write('    rdf:value "' + value +
+                                      '"^^xsd:integer ;\n')
 
         decimals = fact.attrib.get("decimals", None)
         if decimals is not None:
