@@ -242,9 +242,8 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict) 
                           ":"+etree.QName(fact).localname+" ;\n")
 
     unitRef = fact.attrib.get("unitRef", None)
-
+    isNil = fact.attrib.get('{http://www.w3.org/2001/XMLSchema-instance}nil', None)
     if unitRef is not None:
-        isNil = fact.attrib.get('{http://www.w3.org/2001/XMLSchema-instance}nil', None)
         #print('sourceline', fact.sourceline, 'attrib', fact.attrib, 'nill?', isNil)
         #need to check for xsi:nil 'true' attribute, if so, put rdf:nil
         if isNil:
@@ -284,7 +283,7 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict) 
                 xml += etree.tostring(child).replace('"', "'")
             output.write('    xbrli:resource """' + xml +
                                   '"""^^rdf:XMLLiteral.\n')
-        else:
+        elif not isNil:
             content = fact.text.replace('"', "'")
             if content.split(":")[0] in params['namespaces'].values():
                 output.write('    xbrli:resource ' + content +
