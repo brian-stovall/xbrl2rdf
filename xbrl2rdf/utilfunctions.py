@@ -152,7 +152,7 @@ def loadXML(handler, uri, ns, params, do_downloads = True):
             logging.info('xbrl uri "'+uri+'" not found in zip file, attempting download\n')
             print('processing: ' +uri)
             xmlRoot = xmlFromFile(fixFileReference(uri,parentDirectory))
-        else:
+        elif mappedUri in params['uri2file'].keys():
             filePath = params['uri2file'][mappedUri]
             try:
                 fp = params['xbrl_zipfile'].fs.open(filePath, "r")
@@ -160,6 +160,9 @@ def loadXML(handler, uri, ns, params, do_downloads = True):
             except:
                 logging.info('Could not read '+uri+' from zip-file, even though file present\n')
                 return -1
+        else:
+            logging.info(uri+' not in zip-file\n')
+            return -1
 
 
 

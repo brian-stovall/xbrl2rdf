@@ -192,7 +192,7 @@ def processUnit(unit: etree._Element, params: dict) -> int:
         else:
             output.write("_:unit_" + unit_id +
                                   " xbrli:measure xbrli:"+measure+" .\n\n")
-    elif etree.QName(unit).localname == "divide":
+    elif etree.QName(unit_child).localname == "divide":
         numerator = getNumerator(unit_child, params)
         denominator = getDenominator(unit_child, params)
         output.write("_:unit_"+unit_id+"\n")
@@ -306,19 +306,17 @@ def getNumerator(divide: etree._Element, params: dict) -> str:
     for child in divide:
         if etree.QName(child).localname == "unitNumerator":
             divide_child = child[0]
-            if divide_child:
-                content = divide_child.text
-            break
-    return content
-
+            if divide_child is not None:
+                return divide_child.text
+    assert (False), "Didn't find a numerator in getNumerator!"
 
 def getDenominator(divide: etree._Element, params: dict) -> str:
     for child in divide:
         if etree.QName(child).localname == "unitDenominator":
             divide_child = child[0]
-            if divide_child:
-                content = divide_child.text
-    return content
+            if divide_child is not None:
+                return divide_child.text
+    assert (False), "Didn't find a denominator in getDenominator!"
 
 
 def processSchemaRef(child: etree._Element, provenance: str, params: dict) -> int:
