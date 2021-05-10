@@ -135,7 +135,7 @@ def isAbsolute(url):
     return False
 
 
-def loadXML(handler, uri, ns, params, do_downloads = True):
+def loadXML(handler, uri, ns, params, do_downloads = False):
     global parentDirectory
     res = 0
     xmlRoot = None
@@ -190,8 +190,12 @@ def loadXML(handler, uri, ns, params, do_downloads = True):
         params['log'].write("Error: document has no root element.\n")
         params['errorCount'] += 1
         return -1
-
-    res = handler(root, uri, ns, params)
+    #handlerPrefix = urllib.parse.quote(uri, safe='')
+    #add a ns for the instance
+    addNamespace("instance", uri, params)
+    handlerPrefix = 'instance'
+    #print('in loadXML, handler:', handler, 'prefix', handlerPrefix)
+    res = handler(root, uri, ns, params, handlerPrefix)
 
     params['fileCount'] += 1
 

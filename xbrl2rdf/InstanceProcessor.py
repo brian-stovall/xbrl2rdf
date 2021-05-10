@@ -7,7 +7,7 @@ from .utilfunctions import registerNamespaces, prependDtsQueue
 from .const import XLINK_HREF, XBRL_SCHEMA
 
 
-def processInstance(root: etree._Element, base: str, ns: str, params: dict) -> int:
+def processInstance(root: etree._Element, base: str, ns: str, params: dict, handlerPrefix) -> int:
 
     if etree.QName(root).localname == "schema":
         return processSchema(root, base)
@@ -20,26 +20,26 @@ def processInstance(root: etree._Element, base: str, ns: str, params: dict) -> i
 
     footnote_links: list = list()
 
-    provenance = genProvenanceName(base, params)
+    provenance = genProvenanceName(base, params, handlerPrefix)
 
     for child in root:
         child_name: str = etree.QName(child).localname
         # child_namespace = etree.QName(child).namespace
         if child_name == "context":
-            processContext(child, params)
+            processContext(child, params, handlerPrefix)
         elif child_name == "unit":
-            processUnit(child, params)
+            processUnit(child, params, handlerPrefix)
         elif child_name == "schemaRef":
             uri = child.attrib.get(XLINK_HREF, None)
             if uri is None:
                 logging.error("Couldn't identify schema location.")
                 return -1
-            processSchemaRef(child, provenance, params)
+            processSchemaRef(child, provenance, params, handlerPrefix)
             res = prependDtsQueue(XBRL_SCHEMA, uri, base, ns, 0, params)
         elif child_name == "footnoteLink":
             footnote_links.append(child)
         else:
-            child_name = processFact(child, provenance, base, params)
+            child_name = processFact(child, provenance, base, params, handlerPrefix)
 
     # for child in footnote_links:
     #     # if (child->type != XML_ELEMENT_NODE)
@@ -49,11 +49,11 @@ def processInstance(root: etree._Element, base: str, ns: str, params: dict) -> i
     return res
 
 
-def processContext(context: etree._Element, params: dict) -> int:
+def processContext(context: etree._Element, params: dict, handlerPrefix) -> int:
 
     context_id = context.attrib.get('id', None)
     output = params['facts']
-    output.write("_:context_"+context_id+"\n")
+    output.write(handlerPrefix+":context_"+context_id+"\n")
     output.write("    xl:type xbrli:context;\n")
     output.write("    xbrli:entity [\n")
 
@@ -124,16 +124,16 @@ def processContext(context: etree._Element, params: dict) -> int:
     return 0
 
 
-def genFactName(params: dict) -> str:
+def genFactName(params: dict, handlerPrefix) -> str:
     params['factCount'] += 1
-    return "_:fact"+str(params['factCount'])
+    return handlerPrefix+":fact"+str(params['factCount'])
 
 
-def genProvenanceName(base: str, params: dict) -> str:
+def genProvenanceName(base: str, params: dict, handlerPrefix) -> str:
     base = base.replace("\\", "\\\\")
     output = params['facts']
     params['provenanceNumber'] += 1
-    name: str = "_:provenance"+str(params['provenanceNumber'])
+    name: str = handlerPrefix+":provenance"+str(params['provenanceNumber'])
     output.write("# provenance for facts from same filing\n")
     output.write(name+" \n")
     output.write('    xlink:href "'+base+'";\n')
@@ -179,7 +179,7 @@ def getContextPeriod(context: etree._Element, params: dict) -> etree._Element:
 # child element for the unit element, e.g. 2 measures for
 # multiple pairs or numerator/denominator this could use
 # one collection for numerator and another for denominator
-def processUnit(unit: etree._Element, params: dict) -> int:
+def processUnit(unit: etree._Element, params: dict, handlerPrefix) -> int:
     output = params['facts']
     unit_id = unit.attrib.get("id", None)
     unit_child = unit[0]
@@ -187,20 +187,20 @@ def processUnit(unit: etree._Element, params: dict) -> int:
           etree.QName(unit_child).localname == "measure"):
         measure = unit_child.text
         if ":" in measure:
-            output.write("_:unit_" + unit_id +
+            output.write(handlerPrefix+":unit_" + unit_id +
                                   " xbrli:measure "+measure+" .\n\n")
         else:
-            output.write("_:unit_" + unit_id +
+            output.write(handlerPrefix+":unit_" + unit_id +
                                   " xbrli:measure xbrli:"+measure+" .\n\n")
     elif etree.QName(unit_child).localname == "divide":
         numerator = getNumerator(unit_child, params)
         denominator = getDenominator(unit_child, params)
-        output.write("_:unit_"+unit_id+"\n")
+        output.write(handlerPrefix+":unit_"+unit_id+"\n")
         output.write("    xbrli:numerator "+numerator+" ;\n")
         output.write("    xbrli:denominator "+denominator+" .\n\n")
     return 0
 
-def processFact(fact: etree._Element, provenance: str, base: str, params: dict) -> str:
+def processFact(fact: etree._Element, provenance: str, base: str, params: dict, handlerPrefix) -> str:
     # fact_id = fact.attrib.get('id', None)
     output = params['facts']
     contextRef = fact.attrib.get("contextRef", None)
@@ -216,7 +216,7 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict) 
         child_fact_name = []
         for child in fact:
             processFact(child, provenance, base, params)
-            child_fact_name.append("_:fact"+str(params['factCount'])+"\n")
+            child_fact_name.append(handlerPrefix+":fact"+str(params['factCount'])+"\n")
 
         factName = genFactName(params)
         output.write(factName+"\n")
@@ -233,7 +233,7 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict) 
 
         return factName
 
-    factName = genFactName(params)
+    factName = genFactName(params, handlerPrefix)
     # change to Raggett-> rdf:type is xl:type and vice versa
     output.write(factName+" \n")
     output.write("    rdf:type xbrli:fact ;\n")
@@ -272,7 +272,7 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict) 
         if balance is not None:
             output.write('    xbrli:balance "'+balance+'"\n')
 
-        output.write("    xbrli:unit _:unit_"+unitRef+";\n")
+        output.write("    xbrli:unit "+handlerPrefix+":unit_"+unitRef+";\n")
     # non-numeric fact
     else:
         count = len(fact)
@@ -297,7 +297,7 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict) 
                     output.write('    xbrli:resource """' + content +
                                           '""" ;\n')
 
-    output.write("    xbrli:context _:context_"+contextRef+" .\n\n")
+    output.write("    xbrli:context "+handlerPrefix+":context_"+contextRef+" .\n\n")
 
     return factName
 
@@ -319,12 +319,12 @@ def getDenominator(divide: etree._Element, params: dict) -> str:
     assert (False), "Didn't find a denominator in getDenominator!"
 
 
-def processSchemaRef(child: etree._Element, provenance: str, params: dict) -> int:
+def processSchemaRef(child: etree._Element, provenance: str, params: dict, handlerPrefix) -> int:
     output = params['facts']
     schemaRef = child.attrib.get(XLINK_HREF, None)
     schemaRef = schemaRef.replace("eu/eu/", "eu/")
     if schemaRef:
-        output.write("_:schemaRef \n")
+        output.write(handlerPrefix+":schemaRef \n")
         output.write("    xl:provenance "+provenance+" ;\n")
         output.write("    link:schemaRef <"+schemaRef+"> .\n\n")
     return 0
