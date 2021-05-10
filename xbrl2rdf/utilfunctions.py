@@ -1,5 +1,6 @@
 import os
 import urllib.parse
+from urllib.request import urlopen, urlparse
 from lxml import etree
 try:
     import regex as re
@@ -9,7 +10,9 @@ from .const import predicates
 from datetime import datetime
 import logging
 
-def processAttribute(node, attr, attr_type=None, 
+parentDirectory = None
+
+def processAttribute(node, attr, attr_type=None,
                      text_prefix='    ', params=None):
     if text_prefix == '    ':
         line_end: str = ' ;\n'
@@ -74,6 +77,45 @@ def appendDtsQueue(uri_type, uri, base, ns, force, params):
     params['dts_queue'].append((uri_type, uri, ns))
     return 0
 
+def xmlFromFile(filename):
+    '''takes a url (or local filename) and returns root XML object'''
+    assert ('../' not in filename), 'garbage file ref got through: \n' + filename
+    if 'http' in filename:
+        filename=filename.replace('\\','/')
+        return etree.parse(urlopen(filename)).getroot()
+    return etree.parse(filename).getroot()
+
+def getParentDirectory(filename):
+    #print('from filename:\n', filename, '\ngot directory\n', os.path.dirname(filename) + os.sep)
+    return os.path.dirname(filename) + os.sep
+
+def fixFileReference(url, parentDirectory, first=True):
+    '''tries to repair file reference, as they are often garbage'''
+    #print('ffr url:\n',url,'\nparentDir\n')
+    #see if it is a file, return normalized if so
+    if os.path.isfile(url):
+        return os.path.normpath(url)
+    #check for relative locators
+    parts = urlparse(url)
+    #print(parts)
+    if not parts.scheme:
+        assert(first == True), 'bad times'
+        recurse = parentDirectory + url
+        return fixFileReference(recurse, parentDirectory, first=False)
+    #clean up ../ and recombine
+    normPath = os.path.normpath(parts.path)
+    if normPath == '.':
+        normPath = ''
+    resultSeparator = '://'
+    #special handling for windows os
+    myScheme = parts.scheme
+    if 'c' in parts.scheme:
+        myScheme = 'C'
+        resultSeparator = ':'
+    result = myScheme + resultSeparator + parts.netloc + normPath
+    if len(parts.fragment) > 0 :
+        result = result + '#' + parts.fragment
+    return result
 
 def isHttpUrl(url):
     return isinstance(url, str) and (url.startswith("http://") or url.startswith("https://"))
@@ -93,28 +135,33 @@ def isAbsolute(url):
     return False
 
 
-def loadXML(handler, uri, ns, params):
-
+def loadXML(handler, uri, ns, params, do_downloads = True):
+    global parentDirectory
     res = 0
-
+    xmlRoot = None
     if uri in params['dts_processed']:
         return 0  # already loaded
     else:
         params['dts_processed'].append(uri)
 
     if isHttpUrl(uri):
+        if parentDirectory == None:
+            parentDirectory = getParentDirectory(uri)
         mappedUri = os.path.abspath(params['xbrl_zipfile'].mappedUrl(uri))
-        if mappedUri not in params['uri2file'].keys():
-            logging.info('xbrl uri "'+uri+'" not found in zip file.\n')
-            return 0
-        filePath = params['uri2file'][mappedUri]
-        try:
-            fp = params['xbrl_zipfile'].fs.open(filePath, "r")
-            content = fp.read()
-        except:
-            logging.info('Could not read "+uri+" from zip-file.\n')
-            params['errorCount'] += 1
-            return -1
+        if mappedUri not in params['uri2file'].keys() and do_downloads:
+            logging.info('xbrl uri "'+uri+'" not found in zip file, attempting download\n')
+            print('processing: ' +uri)
+            xmlRoot = xmlFromFile(fixFileReference(uri,parentDirectory))
+        else:
+            filePath = params['uri2file'][mappedUri]
+            try:
+                fp = params['xbrl_zipfile'].fs.open(filePath, "r")
+                content = fp.read()
+            except:
+                logging.info('Could not read '+uri+' from zip-file, even though file present\n')
+                return -1
+
+
 
     else:  # treat as local file
 
@@ -131,8 +178,10 @@ def loadXML(handler, uri, ns, params):
             params['log'].write("Error: "+uri+" is malformed\n")
             params['errorCount'] += 1
             return -1
-
-    root = etree.fromstring(content,
+    if xmlRoot is not None:
+        root = xmlRoot
+    else:
+        root = etree.fromstring(content,
                             parser=etree.XMLParser(remove_comments=True))
     if root is None:
         params['log'].write("Error: document has no root element.\n")
