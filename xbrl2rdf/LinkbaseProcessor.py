@@ -19,7 +19,7 @@ from .utilfunctions import processAttribute, isHttpUrl, expandRelativePath, \
                            appendDtsQueue, prependDtsQueue
 
 
-def processLinkBase(root: etree._Element, base: str, ns: str, params: dict) -> int:
+def processLinkBase(root: etree._Element, base: str, ns: str, params: dict, handlerPrefix) -> int:
     # first phase searchs for schemas
     logging.info("checking linkbase "+base)
     missingSchemas: int = 0
@@ -38,7 +38,7 @@ def processLinkBase(root: etree._Element, base: str, ns: str, params: dict) -> i
     for node in root:
         node_type = node.attrib.get(XLINK_TYPE, None)
         if node_type == "extended":
-            processExtendedLink(node, base, ns, params)
+            processExtendedLink(node, base, ns, params, handlerPrefix)
         elif node_type == "simple":
             processSimpleLink(node, base, ns, params)
     return 0
@@ -99,7 +99,7 @@ def processSimpleLink(node: etree._Element, base: str, ns: str, params: dict) ->
     return 0
 
 
-def processExtendedLink(element: etree._Element, base: str, ns: str, params: dict) -> int:
+def processExtendedLink(element: etree._Element, base: str, ns: str, params: dict, handlerPrefix) -> int:
     params['xlinkCount'] += 1
     localLocCount = 0
     xlink = {XLINK_ROLE: element.attrib.get(XLINK_ROLE),
@@ -198,7 +198,7 @@ def processExtendedLink(element: etree._Element, base: str, ns: str, params: dic
             arc['toloc'] = labels_nodes[label]
 
     if params['output_format'] == 1:
-        XLink2RDF(element, xlink, base, ns, params)
+        XLink2RDF(element, xlink, base, ns, params, handlerPrefix)
     elif params['output_format'] == 2:
         XLink2RDFstar(element, xlink, base, ns, params)
 
@@ -216,7 +216,7 @@ def process_resource(name: str, resource: dict, base: str, ns: str, params: dict
         output.write("    xl:type "+prefix+":"+name+" ;\n")
     else:
         output.write("    xl:type <"+namespace+"/"+name+"> ;\n")
-        
+
     output.write(processAttribute(resource, XLINK_ROLE,
                                   attr_type=None, params=params))
     output.write(processAttribute(resource, XML_LANG,
@@ -282,7 +282,7 @@ def process_resource(name: str, resource: dict, base: str, ns: str, params: dict
     return 0
 
 
-def XLink2RDF(node: etree._Element, xlink: dict, base: str, ns: str, params: dict) -> int:
+def XLink2RDF(node: etree._Element, xlink: dict, base: str, ns: str, params: dict, handlerPrefix) -> int:
 
     output = params['out']
 
@@ -303,7 +303,7 @@ def XLink2RDF(node: etree._Element, xlink: dict, base: str, ns: str, params: dic
 
             for arc_to in arc['toloc']:
 
-                blank = genLinkName(params)
+                blank = genLinkName(params, handlerPrefix)
 
                 triple_subject = getTurtleName(arc_from, base, ns, params)
                 triple_predicate = genRoleName(arc[XLINK_ARCROLE],
@@ -329,7 +329,7 @@ def XLink2RDF(node: etree._Element, xlink: dict, base: str, ns: str, params: dic
                 output.write(processAttribute(arc, NAME, attr_type=str, params=params))
                 output.write(processAttribute(arc, PREFERRED_LABEL, attr_type=str, params=params))
                 # end of addition to xbrlimport / Raggett
- 
+
                 output.write(processAttribute(arc, USE, attr_type=str, params=params))
                 output.write(processAttribute(arc, PRIORITY, attr_type=int, params=params))
                 output.write(processAttribute(arc, ORDER, attr_type=float, params=params))
@@ -339,7 +339,7 @@ def XLink2RDF(node: etree._Element, xlink: dict, base: str, ns: str, params: dic
 
                 locator_type = arc_to.get(XLINK_TYPE, None)
                 if locator_type == "resource":
-                    name = genResourceName(params)
+                    name = genResourceName(params, handlerPrefix)
                     output.write("    xl:to "+name+" ;\n")
                     output.write("    ] .\n\n")
                     process_resource(name, arc_to, base, ns, params)
@@ -417,15 +417,15 @@ def XLink2RDFstar(node: etree._Element, xlink: dict, base: str, ns: str, params:
     return 0
 
 
-def genLinkName(params: dict) -> str:
+def genLinkName(params: dict, handlerPrefix) -> str:
     params['linkCount'] += 1
-    name = "_:link"+str(params['linkCount'])
+    name = handlerPrefix+":link"+str(params['linkCount'])
     return name
 
 
-def genResourceName(params: dict) -> str:
+def genResourceName(params: dict, handlerPrefix) -> str:
     params['resourceCount'] += 1
-    name = "_:resource"+str(params['resourceCount'])
+    name = handlerPrefix+":resource"+str(params['resourceCount'])
     return name
 
 

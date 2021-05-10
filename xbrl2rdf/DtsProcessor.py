@@ -3,12 +3,12 @@ from .utilfunctions import loadXML
 from .SchemaProcessor import processSchema
 from .LinkbaseProcessor import processLinkBase
 
-
-def processDtsFile(root, base, ns, params):
+#this is the handler for dts
+def processDtsFile(root, base, ns, params, handlerPrefix):
     if etree.QName(root).localname == "schema":
         res = processSchema(root, base, params)
     elif etree.QName(root).localname == "linkbase":
-        res = processLinkBase(root, base, ns, params)
+        res = processLinkBase(root, base, ns, params, handlerPrefix)
     return res
 
 

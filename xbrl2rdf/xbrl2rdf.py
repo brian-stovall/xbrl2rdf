@@ -92,6 +92,7 @@ def go(taxo: int, output_format: int, url, output) -> int:
     params['arcroleNumber']: int = 0
     params['roleNumber']: int = 0
     params['resourceCount']: int = 0
+    params['dtsCount']: int = 0
 
     addNamespace("xbrli", "http://www.xbrl.org/2003/instance", params)
     addNamespace("link", "http://www.xbrl.org/2003/linkbase", params)

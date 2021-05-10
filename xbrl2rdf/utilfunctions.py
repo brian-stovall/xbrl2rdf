@@ -135,7 +135,7 @@ def isAbsolute(url):
     return False
 
 
-def loadXML(handler, uri, ns, params, do_downloads = False):
+def loadXML(handler, uri, ns, params, do_downloads = True):
     global parentDirectory
     res = 0
     xmlRoot = None
@@ -191,10 +191,20 @@ def loadXML(handler, uri, ns, params, do_downloads = False):
         params['errorCount'] += 1
         return -1
     #handlerPrefix = urllib.parse.quote(uri, safe='')
-    #add a ns for the instance
-    addNamespace("instance", uri, params)
-    handlerPrefix = 'instance'
-    #print('in loadXML, handler:', handler, 'prefix', handlerPrefix)
+    #add a ns for the instance, or a numbered dts namespace
+    if handler.__name__ == 'processInstance':
+        addNamespace("instance", uri, params)
+        handlerPrefix = 'instance'
+    elif handler.__name__ == 'processDtsFile':
+        params['dtsCount'] = params['dtsCount'] + 1
+        dtsCount = str(params['dtsCount'])
+        addNamespace("dts"+dtsCount, uri, params)
+        handlerPrefix = "dts"+dtsCount
+    else:
+        assert(False), 'unregistered handler: '+ handler.__name__
+
+    #print('in loadXML, handler:', handler.__name__, 'prefix', handlerPrefix)
+
     res = handler(root, uri, ns, params, handlerPrefix)
 
     params['fileCount'] += 1
