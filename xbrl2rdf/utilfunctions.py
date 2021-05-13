@@ -193,7 +193,7 @@ def loadXML(handler, uri, ns, params, do_downloads = True):
     #handlerPrefix = urllib.parse.quote(uri, safe='')
     #add a ns for the instance, or a numbered dts namespace
     if handler.__name__ == 'processInstance':
-        addNamespace("instance", uri, params)
+        addNamespace("instance", os.path.basename(uri), params)
         handlerPrefix = 'instance'
     elif handler.__name__ == 'processDtsFile':
         params['dtsCount'] = params['dtsCount'] + 1
