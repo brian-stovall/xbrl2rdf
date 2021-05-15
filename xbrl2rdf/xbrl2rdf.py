@@ -93,6 +93,10 @@ def go(taxo: int, output_format: int, url, output) -> int:
     params['roleNumber']: int = 0
     params['resourceCount']: int = 0
     params['dtsCount']: int = 0
+    #dict: key: namespace, value (safe) url for filename
+    params['urlfilename']: dict = dict()
+    #dict: key: namespace, value stringIO containing document data
+    params['pagedata']: dict = dict()
 
     addNamespace("xbrli", "http://www.xbrl.org/2003/instance", params)
     addNamespace("link", "http://www.xbrl.org/2003/linkbase", params)
@@ -139,39 +143,24 @@ def go(taxo: int, output_format: int, url, output) -> int:
                                     "http://www.xbrl.org/2003/linkbase"]
 
     # utilfunctions.printNamespaces(params)
+    #setup filename and stringIO for instance doc
+    params['urlfilename']['instance'] = ''.join(os.path.basename(url).split(".")[0:-1])
+    params['pagedata']['instance'] = StringIO()
     res = parse_xbrl(url, params)
     if res:
         logging.warning("WARNING: "+str(params['errorCount'])+" error(s) found when importing "+url)
 
     params['prefix'] = printNamespaces(params)
-
-    file_content: StringIO = StringIO()
-    file_content.write("# RDF triples (turtle syntax)\n\n")
-    file_content.write("# INSTANCE URI  '"+url+"'\n")
-    file_content.write("# TAXONOMY NAME '"+params['package_name']+"'\n")
-    file_content.write("# TAXONOMY URI  '"+params['package_uri']+"'\n")
-    file_content.write("\n")
-    file_content.write(params['prefix'])
-    file_content.write("\n\n")
-    file_content.write(params['facts'].getvalue().replace('\u2264', ''))
-    file_content.write("\n\n")
-    file_content.write(params['out'].getvalue().replace('\u2264', ''))
-    # print(list(params['namespaces'].keys()))
-
-    # check is rdf triples can be read into graph
-    # try:
-    # g = rdflib.Graph()
-    # g.parse(data = file_content.getvalue(), format='turtle')
-    # file_content = BytesIO()
-    # file_content.write(g.serialize(format='turtle'))
-    # except:
-    #     params['log'].write("Error parsing content into graph")
-
-    output_file: str = join(output, "".join(os.path.basename(url).split(".")[0:-1])+".ttl")
-    if output_file:
-        # if isinstance(file_content, BytesIO):
-        #     fh = open(output_file, "wb")
-        # else:
+    for namespace, data in params['pagedata'].items():
+        file_content: StringIO = StringIO()
+        file_content.write("# RDF triples (turtle syntax)\n\n")
+        file_content.write(params['prefix'])
+        file_content.write("\n\n")
+        file_content.write(params['pagedata'][namespace].getvalue().replace('\u2264', ''))
+        url = params['urlfilename'][namespace]
+        output_file: str = join(output, "".join(url +".ttl"))
+        print('writing:', namespace, 'to:', output_file)
+        assert (output_file), 'unable to open ' + output_file + ' for writing!'
         fh = open(output_file, "w", encoding='utf-8')
         fh.write(file_content.getvalue())
         fh.close()

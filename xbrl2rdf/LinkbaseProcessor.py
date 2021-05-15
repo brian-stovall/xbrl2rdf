@@ -200,14 +200,14 @@ def processExtendedLink(element: etree._Element, base: str, ns: str, params: dic
     if params['output_format'] == 1:
         XLink2RDF(element, xlink, base, ns, params, handlerPrefix)
     elif params['output_format'] == 2:
-        XLink2RDFstar(element, xlink, base, ns, params)
+        XLink2RDFstar(element, xlink, base, ns, params, handlerPrefix)
 
     return 0
 
 
-def process_resource(name: str, resource: dict, base: str, ns: str, params: dict) -> int:
+def process_resource(name: str, resource: dict, base: str, ns: str, params: dict, handlerPrefix) -> int:
 
-    output = params['out']
+    output = params['pagedata'][handlerPrefix]
     output.write(name+" \n")
     namespace = etree.QName(resource['node']).namespace
     name = etree.QName(resource['node']).localname
@@ -284,8 +284,7 @@ def process_resource(name: str, resource: dict, base: str, ns: str, params: dict
 
 def XLink2RDF(node: etree._Element, xlink: dict, base: str, ns: str, params: dict, handlerPrefix) -> int:
 
-    output = params['out']
-
+    output = params['pagedata'][handlerPrefix]
     output.write("# XLINKS\n")
     output.write("# localname: "+etree.QName(node.tag).localname+"\n")
     output.write("# role: "+node.attrib.get(XLINK_ROLE, None)+"\n")
@@ -342,7 +341,7 @@ def XLink2RDF(node: etree._Element, xlink: dict, base: str, ns: str, params: dic
                     name = genResourceName(params, handlerPrefix)
                     output.write("    xl:to "+name+" ;\n")
                     output.write("    ] .\n\n")
-                    process_resource(name, arc_to, base, ns, params)
+                    process_resource(name, arc_to, base, ns, params, handlerPrefix)
                 else:
                     output.write("    xl:to "+triple_object+" ;\n")
                     output.write("    ] .\n\n")
@@ -351,9 +350,10 @@ def XLink2RDF(node: etree._Element, xlink: dict, base: str, ns: str, params: dic
     return 0
 
 
-def XLink2RDFstar(node: etree._Element, xlink: dict, base: str, ns: str, params: dict) -> int:
+def XLink2RDFstar(node: etree._Element, xlink: dict, base: str, ns: str, params: dict, handlerPrefix) -> int:
 
-    output = params['out']
+    output = params['pagedata'][handlerPrefix]
+
 
     output.write("# XLINKS\n")
     output.write("# localname: "+etree.QName(node.tag).localname+"\n")
@@ -412,7 +412,7 @@ def XLink2RDFstar(node: etree._Element, xlink: dict, base: str, ns: str, params:
                 output.write("\n")
                 locator_type = arc_to.get(XLINK_TYPE, None)
                 if locator_type == "resource":
-                    process_resource(arc_to, base, ns, params)
+                    process_resource(arc_to, base, ns, params, handlerPrefix)
 
     return 0
 

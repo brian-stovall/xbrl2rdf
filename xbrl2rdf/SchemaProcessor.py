@@ -13,7 +13,7 @@ from datetime import datetime
 from lxml import etree
 import logging
 
-def processSchema(root: etree._Element, base: str, params: dict) -> int:
+def processSchema(root: etree._Element, base: str, params: dict, handlerPrefix) -> int:
 
     # skip core schemas
     targetNs = root.attrib.get("targetNamespace", None)
@@ -23,7 +23,7 @@ def processSchema(root: etree._Element, base: str, params: dict) -> int:
     logging.info("processing schema "+base)
 
     registerNamespaces(root, base, params)
-    processElements(root, base, targetNs, params)
+    processElements(root, base, targetNs, params, handlerPrefix)
     xpathobj = root.xpath("//link:linkbaseRef",
                           namespaces={"link":
                                       "http://www.xbrl.org/2003/linkbase"})
@@ -66,9 +66,9 @@ def processImportedSchema(root: etree._Element, base: str, ns: str, params: dict
     return res
 
 
-def processElements(root: etree._Element, base: str, targetNs: str, params: dict) -> int:
+def processElements(root: etree._Element, base: str, targetNs: str, params: dict, handlerPrefix) -> int:
 
-    output = params['out']
+    output = params['pagedata'][handlerPrefix]
     namespaces = params['namespaces']
 
     # child_name = etree.QName(child).localname

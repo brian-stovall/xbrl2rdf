@@ -10,7 +10,7 @@ from .const import XLINK_HREF, XBRL_SCHEMA
 def processInstance(root: etree._Element, base: str, ns: str, params: dict, handlerPrefix) -> int:
 
     if etree.QName(root).localname == "schema":
-        return processSchema(root, base)
+        return processSchema(root, base, handlerPrefix)
     if etree.QName(root).localname == "linkbase":
         return processLinkBase(root, base, ns)
 
@@ -52,7 +52,7 @@ def processInstance(root: etree._Element, base: str, ns: str, params: dict, hand
 def processContext(context: etree._Element, params: dict, handlerPrefix) -> int:
 
     context_id = context.attrib.get('id', None)
-    output = params['facts']
+    output = params['pagedata']['instance']
     output.write(handlerPrefix+":context_"+context_id+"\n")
     output.write("    xl:type xbrli:context;\n")
     output.write("    xbrli:entity [\n")
@@ -131,7 +131,7 @@ def genFactName(params: dict, handlerPrefix) -> str:
 
 def genProvenanceName(base: str, params: dict, handlerPrefix) -> str:
     base = base.replace("\\", "\\\\")
-    output = params['facts']
+    output = params['pagedata']['instance']
     params['provenanceNumber'] += 1
     name: str = handlerPrefix+":provenance"+str(params['provenanceNumber'])
     output.write("# provenance for facts from same filing\n")
@@ -180,7 +180,7 @@ def getContextPeriod(context: etree._Element, params: dict) -> etree._Element:
 # multiple pairs or numerator/denominator this could use
 # one collection for numerator and another for denominator
 def processUnit(unit: etree._Element, params: dict, handlerPrefix) -> int:
-    output = params['facts']
+    output = params['pagedata']['instance']
     unit_id = unit.attrib.get("id", None)
     unit_child = unit[0]
     if (unit_child is not None) and (
@@ -202,7 +202,7 @@ def processUnit(unit: etree._Element, params: dict, handlerPrefix) -> int:
 
 def processFact(fact: etree._Element, provenance: str, base: str, params: dict, handlerPrefix) -> str:
     # fact_id = fact.attrib.get('id', None)
-    output = params['facts']
+    output = params['pagedata']['instance']
     contextRef = fact.attrib.get("contextRef", None)
     prefix = params['namespaces'].get(etree.QName(fact).namespace, None)
 
@@ -320,7 +320,7 @@ def getDenominator(divide: etree._Element, params: dict) -> str:
 
 
 def processSchemaRef(child: etree._Element, provenance: str, params: dict, handlerPrefix) -> int:
-    output = params['facts']
+    output = params['pagedata']['instance']
     schemaRef = child.attrib.get(XLINK_HREF, None)
     schemaRef = schemaRef.replace("eu/eu/", "eu/")
     if schemaRef:

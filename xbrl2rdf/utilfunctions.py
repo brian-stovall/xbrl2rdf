@@ -1,5 +1,6 @@
 import os
 import urllib.parse
+from io import StringIO
 from urllib.request import urlopen, urlparse
 from lxml import etree
 try:
@@ -172,7 +173,6 @@ def loadXML(handler, uri, ns, params, do_downloads = True):
             filePath = uri[6:]
         else:
             filePath = uri
-
         try:
             fp = open(filePath, "rb")
             content = fp.read()
@@ -190,7 +190,6 @@ def loadXML(handler, uri, ns, params, do_downloads = True):
         params['log'].write("Error: document has no root element.\n")
         params['errorCount'] += 1
         return -1
-    #handlerPrefix = urllib.parse.quote(uri, safe='')
     #add a ns for the instance, or a numbered dts namespace
     if handler.__name__ == 'processInstance':
         addNamespace("instance", os.path.basename(uri), params)
@@ -198,8 +197,14 @@ def loadXML(handler, uri, ns, params, do_downloads = True):
     elif handler.__name__ == 'processDtsFile':
         params['dtsCount'] = params['dtsCount'] + 1
         dtsCount = str(params['dtsCount'])
-        addNamespace("dts"+dtsCount, uri, params)
-        handlerPrefix = "dts"+dtsCount
+        currentDts = 'dts'+dtsCount
+        #safeUri = urllib.parse.quote(uri, safe='')
+        #full https filenames are too long for OS sometimes
+        simpleUri = ''.join(os.path.basename(uri).split(".")[0:-1])
+        addNamespace(currentDts, uri, params)
+        params['urlfilename'][currentDts] = simpleUri
+        params['pagedata'][currentDts] = StringIO()
+        handlerPrefix = currentDts
     else:
         assert(False), 'unregistered handler: '+ handler.__name__
 

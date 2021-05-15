@@ -6,7 +6,7 @@ from .LinkbaseProcessor import processLinkBase
 #this is the handler for dts
 def processDtsFile(root, base, ns, params, handlerPrefix):
     if etree.QName(root).localname == "schema":
-        res = processSchema(root, base, params)
+        res = processSchema(root, base, params, handlerPrefix)
     elif etree.QName(root).localname == "linkbase":
         res = processLinkBase(root, base, ns, params, handlerPrefix)
     return res
