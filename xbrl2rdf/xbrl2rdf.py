@@ -37,9 +37,17 @@ taxo_choices: str = "\n".join([str(idx)+": "+str(item['name']) for idx, item in 
 #@click.option('--output_format', default=1, prompt="1: rdf-turtle\n2: rdf-star-turtle\n")
 
 def main():
+    #list of the files already in output dir, used to not process
+    completed_output = list()
     extensions_to_process = ['.xbrl']
     directory = tk.filedialog.askdirectory(title = 'Select input directory')
     output = tk.filedialog.askdirectory(title = 'Select output directory')
+    #build list of pre-existing output
+    for filename in os.listdir(output):
+        extension = os.path.splitext(filename)[1]
+        if extension == '.ttl':
+            completed_output.append(filename)
+    #print(completed_output)
     for filename in os.listdir(directory):
         extension = os.path.splitext(filename)[1]
         if extension in extensions_to_process:
@@ -47,14 +55,9 @@ def main():
             print('processing: ', url)
             #setting the default taxo since isn't used with local files
             #and ttl rathern than ttl* since those are the options we need
-            go(2, 1, url, output)
+            go(2, 1, url, output, completed_output)
 
-def go(taxo: int, output_format: int, url, output) -> int:
-    #get input here
-    #url = tk.filedialog.askopenfilename(title = 'Select input file')
-    #print('url', url)
-    #output = tk.filedialog.askdirectory(title = 'Select output directory')
-    #print('output dir', output)
+def go(taxo: int, output_format: int, url, output, completed_output) -> int:
     log_file: str = join(output, "".join(os.path.basename(url).split(".")[0:-1])+".log")
     logging.basicConfig(filename=log_file, level=logging.DEBUG, filemode="w")
 
@@ -99,6 +102,13 @@ def go(taxo: int, output_format: int, url, output) -> int:
     params['pagedata']: dict = dict()
     #dict namespace -> source href
     params['sources']: dict = dict()
+    params['completed_output'] = completed_output
+
+    #don't process instance docs that are already done
+    target_output = ''.join(os.path.basename(url).split(".")[0:-1]) + '.ttl'
+    if target_output in params['completed_output']:
+        print(target_output, ' has already been processed, skipping:' ,url)
+        return 0
 
     addNamespace("xbrli", "http://www.xbrl.org/2003/instance", params)
     addNamespace("link", "http://www.xbrl.org/2003/linkbase", params)
