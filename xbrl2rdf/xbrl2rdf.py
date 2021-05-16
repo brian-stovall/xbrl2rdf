@@ -97,6 +97,8 @@ def go(taxo: int, output_format: int, url, output) -> int:
     params['urlfilename']: dict = dict()
     #dict: key: namespace, value stringIO containing document data
     params['pagedata']: dict = dict()
+    #dict namespace -> source href
+    params['sources']: dict = dict()
 
     addNamespace("xbrli", "http://www.xbrl.org/2003/instance", params)
     addNamespace("link", "http://www.xbrl.org/2003/linkbase", params)
@@ -146,6 +148,7 @@ def go(taxo: int, output_format: int, url, output) -> int:
     #setup filename and stringIO for instance doc
     params['urlfilename']['instance'] = ''.join(os.path.basename(url).split(".")[0:-1])
     params['pagedata']['instance'] = StringIO()
+    params['sources']['instance'] = os.path.basename(url)
     res = parse_xbrl(url, params)
     if res:
         logging.warning("WARNING: "+str(params['errorCount'])+" error(s) found when importing "+url)
@@ -153,6 +156,7 @@ def go(taxo: int, output_format: int, url, output) -> int:
     params['prefix'] = printNamespaces(params)
     for namespace, data in params['pagedata'].items():
         file_content: StringIO = StringIO()
+        file_content.write("#Source HREF: " + params['sources'][namespace]+ "\n\n")
         file_content.write("# RDF triples (turtle syntax)\n\n")
         file_content.write(params['prefix'])
         file_content.write("\n\n")

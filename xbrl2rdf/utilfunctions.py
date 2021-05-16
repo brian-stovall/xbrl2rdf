@@ -204,6 +204,7 @@ def loadXML(handler, uri, ns, params, do_downloads = True):
         addNamespace(currentDts, uri, params)
         params['urlfilename'][currentDts] = simpleUri
         params['pagedata'][currentDts] = StringIO()
+        params['sources'][currentDts] = uri
         handlerPrefix = currentDts
     else:
         assert(False), 'unregistered handler: '+ handler.__name__
