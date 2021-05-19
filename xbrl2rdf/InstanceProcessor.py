@@ -56,49 +56,7 @@ def processContext(context: etree._Element, params: dict, handlerPrefix) -> int:
     output.write(handlerPrefix+":context_"+context_id+"\n")
     output.write("    xl:type xbrli:context;\n")
     output.write("    xbrli:entity [\n")
-
-    # identifier = context[0][0]
-    # scheme = identifier.attrib.get('scheme', None)
-
-    # entity element has optional segment
-    segmentData = getContextSegment(context, params)
-    if segmentData is not None:
-        dimension, tag, value = segmentData
-        output.write('        xbrl2rdf:dimension [\n')
-        if tag is None:
-            output.write('                xbrldt:dimensionItem ' + dimension + ';\n')
-            output.write('                xbrldi:explicitMember '+value+'];\n')
-        else:
-            output.write('                xbrldt:dimensionItem ' + dimension + ';\n')
-            output.write('                xbrldt:dimension-domain ' + tag + ';\n')
-            output.write('                xbrldi:typedMember """' + value +
-                                  '"""^^rdf:XMLLiteral;] ;\n')
-        #output.write('        ] ; \n')
-
-    context_identifier = getContextIdentifier(context, params)
-    context_value = context_identifier.text
-    output.write('        xbrli:identifier "'+context_value+'" ;\n')
-
-    context_scheme = context_identifier.attrib.get("scheme", None)
-    output.write("        xbrli:scheme <"+context_scheme+"> ;\n        ];\n")
-
-    # each context may have one scenario element
-    scenario = getContextScenario(context, params)
-    if scenario is not None:
-        members: list = list()
-        for child in scenario:
-            namespace = etree.QName(child).namespace
-            name = etree.QName(child).localname
-            prefix = params['namespaces'].get(namespace, None)
-            members.append((prefix+":"+name, child.text))
-        output.write('    xbrli:scenario [\n')
-        for member in members:
-            if member[1] is not None:
-                params['facts'].write('        ' + str(member[0]) +
-                                      ' '+str(member[1])+" ;\n")
-        output.write('        ] ;\n')
-
-    # every context element has one period element
+     # every context element has one period element
     period = getContextPeriod(context, params)
     period_child = period[0]
 
@@ -119,7 +77,57 @@ def processContext(context: etree._Element, params: dict, handlerPrefix) -> int:
             output.write('          xbrli:endDate "' + value +
                          '"^^xsd:date; ]\n')
             period_child = period_child.getnext()
-        output.write("        ).\n\n")
+        output.write("        );\n\n")
+
+    context_identifier = getContextIdentifier(context, params)
+    context_value = context_identifier.text
+    output.write('        xbrli:identifier "'+context_value+'" ;\n')
+
+    context_scheme = context_identifier.attrib.get("scheme", None)
+
+    # identifier = context[0][0]
+    # scheme = identifier.attrib.get('scheme', None)
+
+    # entity element has optional segment
+
+    segmentData = getContextSegment(context, params)
+    scenarioData = getContextScenario(context, params)
+    if len(segmentData) > 0 or len(scenarioData) > 0:
+        output.write("        xbrli:scheme <"+context_scheme+"> ;\n        ];\n")
+    else:
+        output.write("        xbrli:scheme <"+context_scheme+"> ;\n        ].\n")
+    if len(segmentData) > 0:
+        output.write('    xbrli:segment [\n')
+        for data in segmentData:
+            dimension, tag, value = data
+            output.write('        xbrldt:dimensionItem [\n')
+            if tag is None:
+                output.write('                xbrldt:dimension ' + dimension + ';\n')
+                output.write('                xbrldi:explicitMember '+value+'];\n')
+            else:
+                output.write('                xbrldt:dimension ' + dimension + ';\n')
+                output.write('                xbrldt:dimension-domain ' + tag + ';\n')
+                output.write('                xbrldi:typedMember """' + value +
+                                      '"""^^rdf:XMLLiteral;] ;\n')
+        if len(scenarioData) > 0:
+            output.write('    ];\n')
+        else:
+            output.write('    ].\n')
+
+    if len(scenarioData) > 0:
+        output.write('    xbrli:scenario [\n')
+        for data in scenarioData:
+            dimension, tag, value = data
+            output.write('        xbrldt:dimensionItem [\n')
+            if tag is None:
+                output.write('                xbrldt:dimension ' + dimension + ';\n')
+                output.write('                xbrldi:explicitMember '+value+'];\n')
+            else:
+                output.write('                xbrldt:dimension ' + dimension + ';\n')
+                output.write('                xbrldt:dimension-domain ' + tag + ';\n')
+                output.write('                xbrldi:typedMember """' + value +
+                                      '"""^^rdf:XMLLiteral;] ;\n')
+        output.write('    ].\n\n')
 
     return 0
 
@@ -148,25 +156,44 @@ def getContextIdentifier(context: etree._Element, params: dict) -> etree._Elemen
 
 
 def getContextSegment(context: etree._Element, params: dict) -> etree._Element:
+    return getContextDimensions(context, params, 'segment')
+    '''
+    dimensionlist = list()
     for node in context.iter():
         if etree.QName(node).localname == "segment":
             for subnode in node.iter():
                 if etree.QName(subnode).localname == "explicitMember":
-                    return (subnode.get('dimension'), None, subnode.text)
+                    dimensionlist.add (subnode.get('dimension'), None, subnode.text)
                 elif etree.QName(subnode).localname == "typedMember":
                     dimension = subnode.get('dimension')
                     inner = subnode[0]
                     tagdata = inner.prefix + ":" + etree.QName(inner.tag).localname
-                    return (dimension, tagdata, inner.text)
-    return None
+                    dimensionlist.add (dimension, tagdata, inner.text)
+    return dimensionlist
+    '''
 
+def getContextDimensions(context: etree._Element, params: dict, keyword) -> etree._Element:
+    dimensionlist = list()
+    for node in context.iter():
+        if etree.QName(node).localname == keyword:
+            for subnode in node.iter():
+                if etree.QName(subnode).localname == "explicitMember":
+                    dimensionlist.append((subnode.get('dimension'), None, subnode.text))
+                elif etree.QName(subnode).localname == "typedMember":
+                    dimension = subnode.get('dimension')
+                    inner = subnode[0]
+                    tagdata = inner.prefix + ":" + etree.QName(inner.tag).localname
+                    dimensionlist.append((dimension, tagdata, inner.text))
+    return dimensionlist
 
 def getContextScenario(context: etree._Element, params: dict) -> etree._Element:
+    return getContextDimensions(context, params, 'scenario')
+    '''
     for node in context.iter():
         if etree.QName(node).localname == "scenario":
             return node
     return None
-
+    '''
 
 def getContextPeriod(context: etree._Element, params: dict) -> etree._Element:
     for node in context:

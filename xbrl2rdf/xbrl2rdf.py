@@ -206,7 +206,7 @@ def go(taxo: int, output_format: int, url, output, completed_output, preloads) -
 
 
 def parse_xbrl(uri: str, params: dict) -> int:
-
+    assert(" " not in uri), 'whitespace is not allowed in instance filenames, remove and try again'
     started = datetime.now()
 
     if (isHttpUrl(uri)) and (uri[0] != '/'):
