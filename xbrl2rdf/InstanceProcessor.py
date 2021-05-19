@@ -77,11 +77,11 @@ def processContext(context: etree._Element, params: dict, handlerPrefix) -> int:
             output.write('          xbrli:endDate "' + value +
                          '"^^xsd:date; ]\n')
             period_child = period_child.getnext()
-        output.write("        );\n\n")
+        output.write("        );\n")
 
     context_identifier = getContextIdentifier(context, params)
     context_value = context_identifier.text
-    output.write('        xbrli:identifier "'+context_value+'" ;\n')
+    output.write('    xbrli:identifier "'+context_value+'" ;\n')
 
     context_scheme = context_identifier.attrib.get("scheme", None)
 
@@ -93,9 +93,9 @@ def processContext(context: etree._Element, params: dict, handlerPrefix) -> int:
     segmentData = getContextSegment(context, params)
     scenarioData = getContextScenario(context, params)
     if len(segmentData) > 0 or len(scenarioData) > 0:
-        output.write("        xbrli:scheme <"+context_scheme+"> ;\n        ];\n")
+        output.write("    xbrli:scheme <"+context_scheme+"> ;\n        ];\n")
     else:
-        output.write("        xbrli:scheme <"+context_scheme+"> ;\n        ].\n")
+        output.write("    xbrli:scheme <"+context_scheme+"> ;\n        ].\n")
     if len(segmentData) > 0:
         output.write('    xbrli:segment [\n')
         for data in segmentData:
