@@ -136,13 +136,13 @@ def isAbsolute(url):
     return False
 
 
-def loadXML(handler, uri, ns, params, do_downloads = True):
+def loadXML(handler, uri, ns, params, completed_output, do_downloads = True):
     #skip if already in completed_output
     #target_output = ''.join(os.path.basename(uri).split(".")[0:-1]) + '.ttl'
-    if uri in params['completed_output']:
+    if uri in completed_output:
         print(uri, ' has already been processed, skipping.')
         return 0
-    params['preloads'].append(uri)
+    completed_output.append(uri)
     global parentDirectory
     res = 0
     xmlRoot = None
@@ -157,7 +157,6 @@ def loadXML(handler, uri, ns, params, do_downloads = True):
         mappedUri = os.path.abspath(params['xbrl_zipfile'].mappedUrl(uri))
         if mappedUri not in params['uri2file'].keys() and do_downloads:
             logging.info('xbrl uri "'+uri+'" not found in zip file, attempting download\n')
-            print('processing: ' +uri)
             xmlRoot = xmlFromFile(fixFileReference(uri,parentDirectory))
         elif mappedUri in params['uri2file'].keys():
             filePath = params['uri2file'][mappedUri]

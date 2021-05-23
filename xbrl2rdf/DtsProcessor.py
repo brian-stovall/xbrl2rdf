@@ -20,11 +20,11 @@ def popDtsQueue(params):
     return None
 
 
-def dispatchDtsQueue(params):
+def dispatchDtsQueue(params, completed_output):
     res = 0
     item = popDtsQueue(params)
     while item is not None:
-        res = loadXML(processDtsFile, item[1], item[2], params)
+        res = loadXML(processDtsFile, item[1], item[2], params, completed_output)
         item = popDtsQueue(params)
     return res
 

@@ -39,8 +39,7 @@ taxo_choices: str = "\n".join([str(idx)+": "+str(item['name']) for idx, item in 
 #@click.option('--output_format', default=1, prompt="1: rdf-turtle\n2: rdf-star-turtle\n")
 
 def main():
-    preloads = None
-    #list of the files already in output dir, used to not process
+    #list of the files already processed
     completed_output = list()
     extensions_to_process = ['.xbrl']
     directory = tk.filedialog.askdirectory(title = 'Select input directory')
@@ -49,32 +48,16 @@ def main():
     for filename in os.listdir(output):
         if filename == 'preloads.json':
             with open(join(output, 'preloads.json'), 'r') as infile:
-                preloads=json.load(infile)
-                print('using existing preloads list')
-    if preloads == None:
-        print('no preloads found: creating preloads list')
-        preloads = list()
-    #build list of pre-existing output
-    for entry in preloads:
-        completed_output.append(entry)
-        #print('preload:', entry)
-    '''
-    for filename in os.listdir(output):
-        extension = os.path.splitext(filename)[1]
-        if extension == '.ttl':
-            completed_output.append(filename)
-    '''
-    #print(completed_output)
+                completed_output=json.load(infile)
     for filename in os.listdir(directory):
         extension = os.path.splitext(filename)[1]
         if extension in extensions_to_process:
             url = os.path.join(directory,filename)
-            print('processing: ', url)
             #setting the default taxo since isn't used with local files
             #and ttl rathern than ttl* since those are the options we need
-            go(2, 1, url, output, completed_output, preloads)
+            go(2, 1, url, output, completed_output)
 
-def go(taxo: int, output_format: int, url, output, completed_output, preloads) -> int:
+def go(taxo: int, output_format: int, url, output, completed_output) -> int:
     log_file: str = join(output, "".join(os.path.basename(url).split(".")[0:-1])+".log")
     logging.basicConfig(filename=log_file, level=logging.DEBUG, filemode="w")
 
@@ -119,14 +102,12 @@ def go(taxo: int, output_format: int, url, output, completed_output, preloads) -
     params['pagedata']: dict = dict()
     #dict namespace -> source href
     params['sources']: dict = dict()
-    params['completed_output'] = completed_output
-    params['preloads'] = preloads
     #don't process instance docs that are already done
     #target_output = ''.join(os.path.basename(url).split(".")[0:-1]) + '.ttl'
-    if url in params['completed_output']:
+    if url in completed_output:
         print(url, ' has already been processed, skipping.')
         return 0
-    params['preloads'].append(url)
+    print('processing:', url)
 
     addNamespace("xbrli", "http://www.xbrl.org/2003/instance", params)
     addNamespace("link", "http://www.xbrl.org/2003/linkbase", params)
@@ -177,7 +158,7 @@ def go(taxo: int, output_format: int, url, output, completed_output, preloads) -
     params['urlfilename']['instance'] = ''.join(os.path.basename(url).split(".")[0:-1])
     params['pagedata']['instance'] = StringIO()
     params['sources']['instance'] = os.path.basename(url)
-    res = parse_xbrl(url, params)
+    res = parse_xbrl(url, params, completed_output)
     if res:
         logging.warning("WARNING: "+str(params['errorCount'])+" error(s) found when importing "+url)
 
@@ -199,13 +180,13 @@ def go(taxo: int, output_format: int, url, output, completed_output, preloads) -
         fh.close()
     #write preloads
     with open(join(output, 'preloads.json'), 'w') as outfile:
-        json.dump(params['preloads'], outfile, indent=4)
+        json.dump(completed_output, outfile, indent=4)
     params['xbrl_zipfile'].close()
 
     return 0
 
 
-def parse_xbrl(uri: str, params: dict) -> int:
+def parse_xbrl(uri: str, params: dict, completed_output) -> int:
     assert(" " not in uri), uri + ': whitespace is not allowed in instance filenames, remove and try again'
     started = datetime.now()
 
@@ -215,11 +196,11 @@ def parse_xbrl(uri: str, params: dict) -> int:
             base += os.sep
         uri = expandRelativePath(uri, base)
 
-    if loadXML(processInstance, uri, None, params):
+    if loadXML(processInstance, uri, None, params, completed_output):
         return -1
 
     # process taxonomy files
-    res = dispatchDtsQueue(params)
+    res = dispatchDtsQueue(params, completed_output)
 
     finished = datetime.now()
 
