@@ -140,8 +140,10 @@ def loadXML(handler, uri, ns, params, completed_output, do_downloads = True):
     #skip if already in completed_output
     #target_output = ''.join(os.path.basename(uri).split(".")[0:-1]) + '.ttl'
     if uri in completed_output:
-        print(uri, ' has already been processed, skipping.')
+        #print(uri, ' has already been processed, skipping.')
         return 0
+    else:
+        print('processing:', uri)
     completed_output.append(uri)
     global parentDirectory
     res = 0
