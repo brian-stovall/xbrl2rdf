@@ -62,9 +62,9 @@ def processContext(context: etree._Element, params: dict, handlerPrefix) -> int:
 
     if etree.QName(period_child).localname == "instant":
         instant = period_child.text
-        output.write('    xbrli:instant "'+instant+'"^^xsd:date.\n\n')
+        output.write('    xbrli:instant "'+instant+'"^^xsd:date;\n\n')
     elif etree.QName(period_child).localname == "forever":
-        output.write('    xbrli:period xbrli:forever.\n\n')
+        output.write('    xbrli:period xbrli:forever;\n\n')
     # expect sequence of startDate/endDate pairs
     else:
         output.write("    xbrli:period (\n")
