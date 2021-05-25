@@ -26,9 +26,9 @@ def processInstance(root: etree._Element, base: str, ns: str, params: dict, hand
         child_name: str = etree.QName(child).localname
         # child_namespace = etree.QName(child).namespace
         if child_name == "context":
-            processContext(child, params, handlerPrefix)
+            processContext(child, params, handlerPrefix, provenance)
         elif child_name == "unit":
-            processUnit(child, params, handlerPrefix)
+            processUnit(child, params, handlerPrefix, provenance)
         elif child_name == "schemaRef":
             uri = child.attrib.get(XLINK_HREF, None)
             if uri is None:
@@ -49,12 +49,13 @@ def processInstance(root: etree._Element, base: str, ns: str, params: dict, hand
     return res
 
 
-def processContext(context: etree._Element, params: dict, handlerPrefix) -> int:
+def processContext(context: etree._Element, params: dict, handlerPrefix, provenance) -> int:
 
     context_id = context.attrib.get('id', None)
     output = params['pagedata']['instance']
     output.write(handlerPrefix+":context_"+context_id+"\n")
     output.write("    xl:type xbrli:context;\n")
+    output.write("    xl:provenance "+provenance+";\n")
     output.write("    xbrli:entity [\n")
      # every context element has one period element
     period = getContextPeriod(context, params)
@@ -206,23 +207,22 @@ def getContextPeriod(context: etree._Element, params: dict) -> etree._Element:
 # child element for the unit element, e.g. 2 measures for
 # multiple pairs or numerator/denominator this could use
 # one collection for numerator and another for denominator
-def processUnit(unit: etree._Element, params: dict, handlerPrefix) -> int:
+def processUnit(unit: etree._Element, params: dict, handlerPrefix, provenance) -> int:
     output = params['pagedata']['instance']
     unit_id = unit.attrib.get("id", None)
     unit_child = unit[0]
     if (unit_child is not None) and (
           etree.QName(unit_child).localname == "measure"):
         measure = unit_child.text
+        output.write(handlerPrefix+":unit_" + unit_id+"\n")
+        output.write("    xl:provenance "+provenance+";\n")
         if ":" in measure:
-            output.write(handlerPrefix+":unit_" + unit_id +
-                                  " xbrli:measure "+measure+" .\n\n")
+            output.write("    xbrli:measure "+measure+" .\n\n")
         else:
-            output.write(handlerPrefix+":unit_" + unit_id +
-                                  " xbrli:measure xbrli:"+measure+" .\n\n")
+            output.write("    xbrli:measure xbrli:"+measure+" .\n\n")
     elif etree.QName(unit_child).localname == "divide":
         numerator = getNumerator(unit_child, params)
         denominator = getDenominator(unit_child, params)
-        output.write(handlerPrefix+":unit_"+unit_id+"\n")
         output.write("    xbrli:numerator "+numerator+" ;\n")
         output.write("    xbrli:denominator "+denominator+" .\n\n")
     return 0
