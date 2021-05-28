@@ -209,7 +209,7 @@ def loadXML(handler, uri, ns, params, completed_output, do_downloads = True):
         #full https filenames are too long for OS sometimes
         simpleUri = ''.join(os.path.basename(uri).split(".")[0:-1])
         addNamespace(currentDts, uri, params)
-        params['urlfilename'][currentDts] = simpleUri
+        params['urlfilename'][currentDts] = '/taxonomies/' + simpleUri
         params['pagedata'][currentDts] = StringIO()
         params['sources'][currentDts] = uri
         handlerPrefix = currentDts

@@ -14,6 +14,7 @@ from os.path import join, isfile, abspath
 from datetime import datetime
 import rdflib
 import time
+from pathlib import Path
 
 from .PackageManager import Taxonomies
 from .FileSource import openFileSource
@@ -44,6 +45,9 @@ def main():
     extensions_to_process = ['.xbrl']
     directory = tk.filedialog.askdirectory(title = 'Select input directory')
     output = tk.filedialog.askdirectory(title = 'Select output directory')
+    #setup output directories
+    Path(output + "/data").mkdir(parents=True, exist_ok=True)
+    Path(output + "/taxonomies").mkdir(parents=True, exist_ok=True)
     #check to see if json file exists
     for filename in os.listdir(output):
         if filename == 'preloads.json':
@@ -155,7 +159,7 @@ def go(taxo: int, output_format: int, url, output, completed_output) -> int:
 
     # utilfunctions.printNamespaces(params)
     #setup filename and stringIO for instance doc
-    params['urlfilename']['instance'] = ''.join(os.path.basename(url).split(".")[0:-1])
+    params['urlfilename']['instance'] = '/data/'+''.join(os.path.basename(url).split(".")[0:-1])
     params['pagedata']['instance'] = StringIO()
     params['sources']['instance'] = os.path.basename(url)
     res = parse_xbrl(url, params, completed_output)
@@ -172,7 +176,7 @@ def go(taxo: int, output_format: int, url, output, completed_output) -> int:
         file_content.write(params['pagedata'][namespace].getvalue().replace('\u2264', ''))
         url = params['urlfilename'][namespace]
         strtime = str(time.time())
-        output_file: str = join(output, "".join(url) + '-' + strtime +".ttl")
+        output_file: str = output + "".join(url) + '-' + strtime +".ttl"
         #print('writing:', namespace, 'to:', output_file)
         assert (output_file), 'unable to open ' + output_file + ' for writing!'
         fh = open(output_file, "w", encoding='utf-8')
