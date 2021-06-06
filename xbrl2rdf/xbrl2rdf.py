@@ -1,9 +1,9 @@
 """Main module."""
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, simpledialog
 from tkinter import ttk
 from tkinter import messagebox
-import json
+import json, re
 import sys
 import click
 from io import StringIO, BytesIO
@@ -42,9 +42,11 @@ taxo_choices: str = "\n".join([str(idx)+": "+str(item['name']) for idx, item in 
 def main():
     #list of the files already processed
     completed_output = list()
-    extensions_to_process = ['.xbrl']
+    #extensions_to_process = ['.xbrl']
     directory = tk.filedialog.askdirectory(title = 'Select input directory')
     output = tk.filedialog.askdirectory(title = 'Select output directory')
+    extensions = tk.simpledialog.askstring(title ='Enter extensions separated by whitespace', prompt = 'Enter extensions separated by whitespace')
+    extensions = re.split('\s+', extensions)
     #setup output directories
     Path(output + "/data").mkdir(parents=True, exist_ok=True)
     Path(output + "/taxonomies").mkdir(parents=True, exist_ok=True)
@@ -54,8 +56,8 @@ def main():
             with open(join(output, 'preloads.json'), 'r') as infile:
                 completed_output=json.load(infile)
     for filename in os.listdir(directory):
-        extension = os.path.splitext(filename)[1]
-        if extension in extensions_to_process:
+        extension = os.path.splitext(filename)[1][1:]
+        if extension in extensions:
             url = os.path.join(directory,filename)
             #setting the default taxo since isn't used with local files
             #and ttl rathern than ttl* since those are the options we need
