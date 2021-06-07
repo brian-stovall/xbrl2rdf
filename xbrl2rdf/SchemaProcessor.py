@@ -6,6 +6,8 @@ from .const import MODEL_HIERARCHY, MODEL_DOMAIN, MODEL_ISDEFAULTMEMBER
 from .const import ENUM_LINKROLE, ENUM_DOMAIN
 from .const import XBRLDT_TYPEDDOMAINREF, SUBSTITUTIONGROUP, NILLABLE, \
                    ABSTRACT, BALANCE
+#additions
+from .const import FIXED, EXT_ENUM_LINKROLE
 
 from .utilfunctions import processAttribute, registerNamespaces, \
                            appendDtsQueue, prependDtsQueue
@@ -77,7 +79,7 @@ def processElements(root: etree._Element, base: str, targetNs: str, params: dict
     output.write("# SCHEMAS\n")
     output.write("# target namespace:" + targetNs)
     output.write("# base: "+base+"\n\n")
-
+    unformed_attributes = set()
     for child in root:
         if child.tag == "{http://www.w3.org/2001/XMLSchema}element":
             for item in child.attrib.keys():
@@ -99,8 +101,15 @@ def processElements(root: etree._Element, base: str, targetNs: str, params: dict
                                 SUBSTITUTIONGROUP,
                                 NILLABLE,
                                 ABSTRACT,
-                                BALANCE]:
-                    print("Unknown attribute in element: " + str(item))
+                                BALANCE,
+                                #begin additions
+                                FIXED,
+                                EXT_ENUM_LINKROLE
+                                ]:
+                    if str(item) not in unformed_attributes:
+                        print("Line:",child.sourceline,"Unknown attribute in element: " + str(item))
+                    unformed_attributes.add(str(item))
+
 
             child_name = child.attrib.get('name', None)
             prefix = namespaces.get(targetNs, None)
@@ -151,6 +160,11 @@ def processElements(root: etree._Element, base: str, targetNs: str, params: dict
                                           attr_type=bool, params=params))
             output.write(processAttribute(child, BALANCE,
                                           attr_type=str, params=params))
+            #begin sec additions
+            output.write(processAttribute(child, FIXED,
+                                          attr_type=bool, params=params))
+            output.write(processAttribute(child, EXT_ENUM_LINKROLE,
+                                          attr_type=None, params=params))
 
             output.write('    . \n\n')
 
@@ -161,6 +175,10 @@ def processElements(root: etree._Element, base: str, targetNs: str, params: dict
                 logging.info("name = "+child_name)
             else:
                 addId(base, child_id, targetNs, child_name, params)
+    if len(unformed_attributes) > 0:
+        print('unformed_attribs')
+        for thing in unformed_attributes:
+            print(thing)
     return 0
 
 def addId(xsdUri: str, child_id: str, targetNs: str, name: str, params: dict) -> int:

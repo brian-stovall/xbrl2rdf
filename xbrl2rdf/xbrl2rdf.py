@@ -111,7 +111,7 @@ def go(taxo: int, output_format: int, url, output, completed_output) -> int:
     #don't process instance docs that are already done
     #target_output = ''.join(os.path.basename(url).split(".")[0:-1]) + '.ttl'
     if url in completed_output:
-        print(url, ' has already been processed, skipping.')
+        #print(url, ' has already been processed, skipping.')
         return 0
     print('processing:', url)
 

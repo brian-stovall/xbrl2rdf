@@ -14,7 +14,7 @@ import logging
 parentDirectory = None
 
 def processAttribute(node, attr, attr_type=None,
-                     text_prefix='    ', params=None):
+                     text_prefix='    ', params=None, print_result=False):
     if text_prefix == '    ':
         line_end: str = ' ;\n'
     else:
@@ -36,6 +36,10 @@ def processAttribute(node, attr, attr_type=None,
             return text_prefix+predicates[attr]+' "'+attr_value+'"^^xsd:decimal'+line_end
         elif attr_type == datetime:
             return text_prefix+predicates[attr]+' "'+attr_value+'"^^xsd:dateTime'+line_end
+        elif attr_type == 'as-is':
+            if print_result:
+                print('as is value:',text_prefix+predicates[attr]+' '+attr_value+line_end)
+            return text_prefix+predicates[attr]+' "'+attr_value+line_end
         else:
             name = attr_value.split("/")[-1]
             base = "/".join(attr_value.split("/")[0:-1])
@@ -44,6 +48,8 @@ def processAttribute(node, attr, attr_type=None,
                 attr_value = prefix+":"+name
             else:
                 attr_value = "<"+attr_value+">"
+            if print_result:
+                print('none value:', text_prefix+predicates[attr]+' '+attr_value+line_end)
             return text_prefix+predicates[attr]+' '+attr_value+line_end
     else:
         return ''

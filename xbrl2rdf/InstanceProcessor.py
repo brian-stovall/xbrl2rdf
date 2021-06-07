@@ -306,8 +306,9 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict, 
         if count >= 1:
             xml = ''
             for child in fact:
+                #print(type(child), child.sourceline, 'child:', child)
                 # use single quotation mark if string has quotation marks
-                xml += etree.tostring(child).replace('"', "'")
+                xml += etree.tostring(child, encoding='unicode').replace('"', "'")
             output.write('    xbrli:resource """' + xml +
                                   '"""^^rdf:XMLLiteral.\n')
         elif not isNil:

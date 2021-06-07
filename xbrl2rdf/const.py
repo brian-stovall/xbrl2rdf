@@ -66,6 +66,9 @@ XBRLDT_TARGETROLE: str = '{http://xbrl.org/2005/xbrldt}targetRole'
 XBRLDT_CLOSED: str = '{http://xbrl.org/2005/xbrldt}closed'
 XBRLDT_USABLE: str = '{http://xbrl.org/2005/xbrldt}usable'
 XBRLDT_TYPEDDOMAINREF: str = '{http://xbrl.org/2005/xbrldt}typedDomainRef'
+#additions
+FIXED: str = 'fixed'
+EXT_ENUM_LINKROLE: str = '{http://xbrl.org/2020/extensible-enumerations-2.0}linkrole'
 
 predicates: dict = {XBRLI_PERIODTYPE:   'xbrli:periodType',
               XBRLI_BALANCE:      'xbrli:balance',
@@ -113,6 +116,9 @@ predicates: dict = {XBRLI_PERIODTYPE:   'xbrli:periodType',
               VARIABLE: 'xl:variable',
               DIMENSION: 'xl:dimension',
               SCHEME: 'xl:scheme',
-
               XML_LANG: 'rdf:lang',
-              XLINK_ROLE: 'xlink:role'}
+              XLINK_ROLE: 'xlink:role',
+              #begin additions
+              FIXED: 'fixed',
+              EXT_ENUM_LINKROLE: 'enum2:linkrole'
+              }
