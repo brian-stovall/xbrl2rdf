@@ -69,6 +69,8 @@ XBRLDT_TYPEDDOMAINREF: str = '{http://xbrl.org/2005/xbrldt}typedDomainRef'
 #additions
 FIXED: str = 'fixed'
 EXT_ENUM_LINKROLE: str = '{http://xbrl.org/2020/extensible-enumerations-2.0}linkrole'
+EXT_ENUM_DOMAIN: str = '{http://xbrl.org/2020/extensible-enumerations-2.0}domain'
+EXT_ENUM_HEADUSABLE: str = '{http://xbrl.org/2020/extensible-enumerations-2.0}headUsable'
 
 predicates: dict = {XBRLI_PERIODTYPE:   'xbrli:periodType',
               XBRLI_BALANCE:      'xbrli:balance',
@@ -120,5 +122,7 @@ predicates: dict = {XBRLI_PERIODTYPE:   'xbrli:periodType',
               XLINK_ROLE: 'xlink:role',
               #begin additions
               FIXED: 'fixed',
-              EXT_ENUM_LINKROLE: 'enum2:linkrole'
+              EXT_ENUM_LINKROLE: 'enum2:linkrole',
+              EXT_ENUM_DOMAIN: 'enum2:domain',
+              EXT_ENUM_HEADUSABLE: 'enum2:headUsable'
               }

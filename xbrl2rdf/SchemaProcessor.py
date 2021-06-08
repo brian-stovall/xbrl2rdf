@@ -7,7 +7,8 @@ from .const import ENUM_LINKROLE, ENUM_DOMAIN
 from .const import XBRLDT_TYPEDDOMAINREF, SUBSTITUTIONGROUP, NILLABLE, \
                    ABSTRACT, BALANCE
 #additions
-from .const import FIXED, EXT_ENUM_LINKROLE
+from .const import FIXED, EXT_ENUM_LINKROLE, EXT_ENUM_DOMAIN, \
+                   EXT_ENUM_HEADUSABLE
 
 from .utilfunctions import processAttribute, registerNamespaces, \
                            appendDtsQueue, prependDtsQueue
@@ -104,7 +105,9 @@ def processElements(root: etree._Element, base: str, targetNs: str, params: dict
                                 BALANCE,
                                 #begin additions
                                 FIXED,
-                                EXT_ENUM_LINKROLE
+                                EXT_ENUM_LINKROLE,
+                                EXT_ENUM_DOMAIN,
+                                EXT_ENUM_HEADUSABLE
                                 ]:
                     if str(item) not in unformed_attributes:
                         print("Line:",child.sourceline,"Unknown attribute in element: " + str(item))
@@ -165,7 +168,10 @@ def processElements(root: etree._Element, base: str, targetNs: str, params: dict
                                           attr_type=bool, params=params))
             output.write(processAttribute(child, EXT_ENUM_LINKROLE,
                                           attr_type=None, params=params))
-
+            output.write(processAttribute(child, EXT_ENUM_DOMAIN,
+                                          attr_type=None, params=params))
+            output.write(processAttribute(child, EXT_ENUM_HEADUSABLE,
+                                          attr_type=bool, params=params))
             output.write('    . \n\n')
 
             params['conceptCount'] += 1
