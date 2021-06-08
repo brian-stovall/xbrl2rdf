@@ -6,6 +6,8 @@ from .LinkbaseProcessor import processExtendedLink
 from .utilfunctions import registerNamespaces, prependDtsQueue
 from .const import XLINK_HREF, XBRL_SCHEMA
 
+#change this to true to write types in ttl, false to not
+write_types = False
 
 def processInstance(root: etree._Element, base: str, ns: str, params: dict, handlerPrefix) -> int:
 
@@ -63,7 +65,10 @@ def processContext(context: etree._Element, params: dict, handlerPrefix, provena
 
     if etree.QName(period_child).localname == "instant":
         instant = period_child.text
-        output.write('    xbrli:instant "'+instant+'"^^xsd:date;\n\n')
+        if write_types:
+            output.write('    xbrli:instant "'+instant+'"^^xsd:date;\n\n')
+        else:
+            output.write('    xbrli:instant "'+instant+'";\n\n')
     elif etree.QName(period_child).localname == "forever":
         output.write('    xbrli:period xbrli:forever;\n\n')
     # expect sequence of startDate/endDate pairs
@@ -71,12 +76,20 @@ def processContext(context: etree._Element, params: dict, handlerPrefix, provena
         output.write("    xbrli:period (\n")
         while period_child is not None:
             value = period_child.text
-            output.write('        [ xbrli:startDate "' + value +
-                         '"^^xsd:date;\n')
+            if write_types:
+                output.write('        [ xbrli:startDate "' + value +
+                            '"^^xsd:date;\n')
+            else:
+                output.write('        [ xbrli:startDate "' + value +
+                            '";\n')
             period_child = period_child.getnext()
             value = period_child.text
-            output.write('          xbrli:endDate "' + value +
-                         '"^^xsd:date; ]\n')
+            if write_types:
+                output.write('          xbrli:endDate "' + value +
+                            '"^^xsd:date; ]\n')
+            else:
+                 output.write('          xbrli:endDate "' + value +
+                            '"; ]\n')
             period_child = period_child.getnext()
         output.write("        );\n")
 
@@ -108,8 +121,12 @@ def processContext(context: etree._Element, params: dict, handlerPrefix, provena
             else:
                 output.write('                xbrldt:dimension ' + dimension + ';\n')
                 output.write('                xbrldt:dimension-domain ' + tag + ';\n')
-                output.write('                xbrldi:typedMember """' + value +
-                                      '"""^^rdf:XMLLiteral;] ;\n')
+                if write_types:
+                    output.write('                xbrldi:typedMember """' + value +
+                                        '"""^^rdf:XMLLiteral;] ;\n')
+                else:
+                    output.write('                xbrldi:typedMember """' + value +
+                                        '""";] ;\n')
         if len(scenarioData) > 0:
             output.write('    ];\n')
         else:
@@ -126,8 +143,12 @@ def processContext(context: etree._Element, params: dict, handlerPrefix, provena
             else:
                 output.write('                xbrldt:dimension ' + dimension + ';\n')
                 output.write('                xbrldt:dimension-domain ' + tag + ';\n')
-                output.write('                xbrldi:typedMember """' + value +
-                                      '"""^^rdf:XMLLiteral;] ;\n')
+                if write_types:
+                    output.write('                xbrldi:typedMember """' + value +
+                                        '"""^^rdf:XMLLiteral;] ;\n')
+                else:
+                    output.write('                xbrldi:typedMember """' + value +
+                                        '""";] ;\n')
         output.write('    ].\n\n')
 
     return 0
@@ -278,21 +299,36 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict, 
         else:
             value = fact.text
             if "." in value:
-                output.write('    rdf:value "' + value +
-                                      '"^^xsd:decimal ;\n')
+                if write_types:
+                    output.write('    rdf:value "' + value +
+                                        '"^^xsd:decimal ;\n')
+                else:
+                    output.write('    rdf:value "' + value +
+                                        '" ;\n')
             else:
-                output.write('    rdf:value "' + value +
-                                      '"^^xsd:integer ;\n')
+                if write_types:
+                    output.write('    rdf:value "' + value +
+                                        '"^^xsd:integer ;\n')
+                else:
+                    output.write('    rdf:value "' + value +
+                                        '" ;\n')
 
         decimals = fact.attrib.get("decimals", None)
         if decimals is not None:
-            output.write('    xbrli:decimals "' + decimals +
-                                  '"^^xsd:integer ;\n')
-
+            if write_types:
+                output.write('    xbrli:decimals "' + decimals +
+                                    '"^^xsd:integer ;\n')
+            else:
+                output.write('    xbrli:decimals "' + decimals +
+                                    '" ;\n')
         precision = fact.attrib.get("precision", None)
         if precision is not None:
-            output.write('    xbrli:precision "' + precision +
-                                  '"^^xsd:integer ;\n')
+            if write_types:
+                output.write('    xbrli:precision "' + precision +
+                                    '"^^xsd:integer ;\n')
+            else:
+                output.write('    xbrli:precision "' + precision +
+                                    '" ;\n')
 
         # does xmlGetProp ignore namespace prefix for attribute names?
         balance = fact.attrib.get("balance", None)
@@ -309,8 +345,12 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict, 
                 #print(type(child), child.sourceline, 'child:', child)
                 # use single quotation mark if string has quotation marks
                 xml += etree.tostring(child, encoding='unicode').replace('"', "'")
-            output.write('    xbrli:resource """' + xml +
-                                  '"""^^rdf:XMLLiteral.\n')
+            if write_types:
+                output.write('    xbrli:resource """' + xml +
+                                    '"""^^rdf:XMLLiteral.\n')
+            else:
+                output.write('    xbrli:resource """' + xml +
+                                    '""".\n')
         elif not isNil:
             content = fact.text.replace('"', "'")
             if content.split(":")[0] in params['namespaces'].values():

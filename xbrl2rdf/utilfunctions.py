@@ -12,6 +12,7 @@ from datetime import datetime
 import logging
 
 parentDirectory = None
+write_types = False
 
 def processAttribute(node, attr, attr_type=None,
                      text_prefix='    ', params=None, print_result=False):
@@ -27,15 +28,30 @@ def processAttribute(node, attr, attr_type=None,
     if attr_value:
         attr_value = attr_value.replace("\\", "\\\\")
         if attr_type == bool:
-            return text_prefix+predicates[attr]+' "'+attr_value+'"^^xsd:boolean'+line_end
+            if write_types:
+                return text_prefix+predicates[attr]+' "'+attr_value+'"^^xsd:boolean'+line_end
+            else:
+                return text_prefix+predicates[attr]+' "'+attr_value+'"'+line_end
         elif attr_type == str:
-            return text_prefix+predicates[attr]+' """'+attr_value+'"""^^rdf:XMLLiteral'+line_end
+            if write_types:
+                return text_prefix+predicates[attr]+' """'+attr_value+'"""^^rdf:XMLLiteral'+line_end
+            else:
+                return text_prefix+predicates[attr]+' """'+attr_value+'"""'+line_end
         elif attr_type == int:
-            return text_prefix+predicates[attr]+' "'+attr_value+'"^^xsd:integer'+line_end
+            if write_types:
+                return text_prefix+predicates[attr]+' "'+attr_value+'"^^xsd:integer'+line_end
+            else:
+                return text_prefix+predicates[attr]+' "'+attr_value+'"'+line_end
         elif attr_type == float:
-            return text_prefix+predicates[attr]+' "'+attr_value+'"^^xsd:decimal'+line_end
+            if write_types:
+                return text_prefix+predicates[attr]+' "'+attr_value+'"^^xsd:decimal'+line_end
+            else:
+                return text_prefix+predicates[attr]+' "'+attr_value+'"'+line_end
         elif attr_type == datetime:
-            return text_prefix+predicates[attr]+' "'+attr_value+'"^^xsd:dateTime'+line_end
+            if write_types:
+                return text_prefix+predicates[attr]+' "'+attr_value+'"^^xsd:dateTime'+line_end
+            else:
+                return text_prefix+predicates[attr]+' "'+attr_value+'"'+line_end
         elif attr_type == 'as-is':
             if print_result:
                 print('as is value:',text_prefix+predicates[attr]+' '+attr_value+line_end)

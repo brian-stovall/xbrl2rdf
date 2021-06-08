@@ -18,6 +18,7 @@ from .const import ORDER, USE, PRIORITY, WEIGHT, NAME, COVER, COMPLEMENT, AXIS, 
 from .utilfunctions import processAttribute, isHttpUrl, expandRelativePath, \
                            appendDtsQueue, prependDtsQueue
 
+write_types = False
 
 def processLinkBase(root: etree._Element, base: str, ns: str, params: dict, handlerPrefix) -> int:
     # first phase searchs for schemas
@@ -275,7 +276,10 @@ def process_resource(name: str, resource: dict, base: str, ns: str, params: dict
         if (len(child) > 0) and (child[0].text != '\n          '):
             output.write("    "+prefix+":"+name+' '+child[0].text+' ;\n')
         elif child.text and (child.text != '\n        '):
-            output.write("    "+prefix+":"+name+' """'+child.text+'"""^^rdf:XMLLiteral ;\n')
+            if write_types:
+                output.write("    "+prefix+":"+name+' """'+child.text+'"""^^rdf:XMLLiteral ;\n')
+            else:
+                output.write("    "+prefix+":"+name+' """'+child.text+'""" ;\n')
 
     output.write("    .\n\n")
 
