@@ -73,7 +73,7 @@ def processContext(context: etree._Element, params: dict, handlerPrefix, provena
         output.write('    xbrli:period xbrli:forever;\n\n')
     # expect sequence of startDate/endDate pairs
     else:
-        output.write("    xbrli:period (\n")
+        output.write("    xbrli:period \n")
         while period_child is not None:
             value = period_child.text
             if write_types:
@@ -91,7 +91,7 @@ def processContext(context: etree._Element, params: dict, handlerPrefix, provena
                  output.write('          xbrli:endDate "' + value +
                             '"; ]\n')
             period_child = period_child.getnext()
-        output.write("        );\n")
+        output.write("        ;\n")
 
     context_identifier = getContextIdentifier(context, params)
     context_value = context_identifier.text
