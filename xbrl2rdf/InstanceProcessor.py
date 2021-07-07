@@ -65,10 +65,11 @@ def processContext(context: etree._Element, params: dict, handlerPrefix, provena
 
     if etree.QName(period_child).localname == "instant":
         instant = period_child.text
+        output.write('    xbrli:period \n')
         if write_types:
-            output.write('    xbrli:instant "'+instant+'"^^xsd:date;\n\n')
+            output.write('        [ xbrli:instant "'+instant+'"^^xsd:date; ];\n')
         else:
-            output.write('    xbrli:instant "'+instant+'";\n\n')
+            output.write('        [ xbrli:instant "'+instant+'"; ];\n')
     elif etree.QName(period_child).localname == "forever":
         output.write('    xbrli:period xbrli:forever;\n\n')
     # expect sequence of startDate/endDate pairs
