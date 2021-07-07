@@ -231,21 +231,30 @@ def getContextPeriod(context: etree._Element, params: dict) -> etree._Element:
 def processUnit(unit: etree._Element, params: dict, handlerPrefix, provenance) -> int:
     output = params['pagedata']['instance']
     unit_id = unit.attrib.get("id", None)
+    unitDetails =[]
     unit_child = unit[0]
     if (unit_child is not None) and (
           etree.QName(unit_child).localname == "measure"):
         measure = unit_child.text
         output.write(handlerPrefix+":unit_" + unit_id+"\n")
-        output.write("    xl:provenance "+provenance+";\n")
+        unitDetails.append("    xl:provenance "+provenance)
         if ":" in measure:
-            output.write("    xbrli:measure "+measure+" .\n\n")
+            unitDetails.append("    xbrli:measure "+measure)
         else:
-            output.write("    xbrli:measure xbrli:"+measure+" .\n\n")
+            unitDetails.append("    xbrli:measure xbrli:"+measure)
     elif etree.QName(unit_child).localname == "divide":
+        output.write(handlerPrefix+":unit_" + unit_id+"\n")
         numerator = getNumerator(unit_child, params)
         denominator = getDenominator(unit_child, params)
-        output.write("    xbrli:numerator "+numerator+" ;\n")
-        output.write("    xbrli:denominator "+denominator+" .\n\n")
+        unitDetails.append("    xbrli:numerator "+numerator)
+        unitDetails.append("    xbrli:denominator "+denominator)
+    if unit_child is not None:
+        for detail in unitDetails:
+            output.write(detail)
+            if detail == unitDetails[-1]:
+                output.write(' .\n\n')
+            else:
+                output.write(' ;\n')
     return 0
 
 def processFact(fact: etree._Element, provenance: str, base: str, params: dict, handlerPrefix) -> str:
@@ -375,7 +384,11 @@ def getNumerator(divide: etree._Element, params: dict) -> str:
         if etree.QName(child).localname == "unitNumerator":
             divide_child = child[0]
             if divide_child is not None:
-                return divide_child.text
+                value = divide_child.text
+                if ":" in value:
+                    return value
+                else:
+                    return 'xbrli:'+value
     assert (False), "Didn't find a numerator in getNumerator!"
 
 def getDenominator(divide: etree._Element, params: dict) -> str:
@@ -383,7 +396,11 @@ def getDenominator(divide: etree._Element, params: dict) -> str:
         if etree.QName(child).localname == "unitDenominator":
             divide_child = child[0]
             if divide_child is not None:
-                return divide_child.text
+                value = divide_child.text
+                if ":" in value:
+                    return value
+                else:
+                    return 'xbrli:'+value
     assert (False), "Didn't find a denominator in getDenominator!"
 
 
