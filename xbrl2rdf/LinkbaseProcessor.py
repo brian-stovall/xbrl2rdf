@@ -261,9 +261,9 @@ def process_resource(name: str, resource: dict, base: str, ns: str, params: dict
     if resource_text and (resource_text) != '\n      ':
         lang = resource.get('{http://www.w3.org/XML/1998/namespace}lang', None)
         if lang is not None:
-            output.write('    rdf:value """'+resource_text+'"""@'+lang+' ;\n')
+            output.write('    rdf:literal """'+resource_text+'"""@'+lang+' ;\n')
         else:
-            output.write('    rdf:value """'+resource_text+'"""; \n')
+            output.write('    rdf:literal """'+resource_text+'"""; \n')
     # else:
     #     resource_label = getTurtleName(resource, base, ns, params)
     #     if resource_label is not None:

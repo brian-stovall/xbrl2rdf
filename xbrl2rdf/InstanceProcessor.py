@@ -305,22 +305,22 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict, 
         #print('sourceline', fact.sourceline, 'attrib', fact.attrib, 'nill?', isNil)
         #need to check for xsi:nil 'true' attribute, if so, put rdf:nil
         if isNil:
-            output.write('    rdf:value ' + 'rdf:nil;\n')
+            output.write('    rdf:literal ' + 'rdf:nil;\n')
         else:
             value = fact.text
             if "." in value:
                 if write_types:
-                    output.write('    rdf:value "' + value +
+                    output.write('    rdf:literal "' + value +
                                         '"^^xsd:decimal ;\n')
                 else:
-                    output.write('    rdf:value "' + value +
+                    output.write('    rdf:literal "' + value +
                                         '" ;\n')
             else:
                 if write_types:
-                    output.write('    rdf:value "' + value +
+                    output.write('    rdf:literal "' + value +
                                         '"^^xsd:integer ;\n')
                 else:
-                    output.write('    rdf:value "' + value +
+                    output.write('    rdf:literal "' + value +
                                         '" ;\n')
 
         decimals = fact.attrib.get("decimals", None)
@@ -356,23 +356,23 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict, 
                 # use single quotation mark if string has quotation marks
                 xml += etree.tostring(child, encoding='unicode').replace('"', "'")
             if write_types:
-                output.write('    xbrli:resource """' + xml +
+                output.write('    rdf:literal """' + xml +
                                     '"""^^rdf:XMLLiteral.\n')
             else:
-                output.write('    xbrli:resource """' + xml +
+                output.write('    rdf:literal """' + xml +
                                     '""".\n')
         elif not isNil:
             content = fact.text.replace('"', "'")
             if content.split(":")[0] in params['namespaces'].values():
-                output.write('    xbrli:resource ' + content +
+                output.write('    rdf:literal ' + content +
                                       ' ;\n')
             else:
                 lang = fact.attrib.get("lang", None)
                 if lang is not None:
-                    output.write('    xbrli:resource """' + content +
+                    output.write('    rdf:literal """' + content +
                                           '"""@'+lang+' ;\n')
                 else:
-                    output.write('    xbrli:resource """' + content +
+                    output.write('    rdf:literal """' + content +
                                           '""" ;\n')
 
     output.write("    xbrli:context "+handlerPrefix+":context_"+contextRef+" .\n\n")
