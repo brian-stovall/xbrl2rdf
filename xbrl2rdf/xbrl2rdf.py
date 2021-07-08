@@ -150,6 +150,7 @@ def go(taxo: int, output_format: int, url, output, completed_output) -> int:
     addNamespace("va", "http://xbrl.org/2008/assertion/value", params)
     addNamespace("ea", "http://xbrl.org/2008/assertion/existence", params)
     addNamespace("xbrl2rdf", "https://github.com/wjwillemse/xbrl2rdf", params)
+    addNamespace("oddb", "http://www.workiva.com/oddb", params)
 
 
     # schemas not to include

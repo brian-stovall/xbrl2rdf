@@ -57,7 +57,7 @@ def processContext(context: etree._Element, params: dict, handlerPrefix, provena
     output = params['pagedata']['instance']
     output.write(handlerPrefix+":context_"+context_id+"\n")
     output.write("    xl:type xbrli:context;\n")
-    output.write("    xl:provenance "+provenance+";\n")
+    output.write("    oddb:provenance "+provenance+";\n")
     output.write("    xbrli:entity [\n")
      # every context element has one period element
     period = getContextPeriod(context, params)
@@ -238,7 +238,7 @@ def processUnit(unit: etree._Element, params: dict, handlerPrefix, provenance) -
           etree.QName(unit_child).localname == "measure"):
         measure = unit_child.text
         output.write(handlerPrefix+":unit_" + unit_id+"\n")
-        unitDetails.append("    xl:provenance "+provenance)
+        unitDetails.append("    oddb:provenance "+provenance)
         if ":" in measure:
             unitDetails.append("    xbrli:measure "+measure)
         else:
@@ -279,7 +279,7 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict, 
         factName = genFactName(params)
         output.write(factName+"\n")
         output.write("    xl:type xbrli:tuple ;\n")
-        output.write("    xl:provenance "+provenance+" ;\n")
+        output.write("    oddb:provenance "+provenance+" ;\n")
         output.write("    rdf:type " + prefix +
                               ":"+etree.QName(fact).localname+" ;\n")
         output.write("    xbrli:content (\n")
@@ -294,8 +294,8 @@ def processFact(fact: etree._Element, provenance: str, base: str, params: dict, 
     factName = genFactName(params, handlerPrefix)
     # change to Raggett-> rdf:type is xl:type and vice versa
     output.write(factName+" \n")
-    output.write("    rdf:type xbrli:fact ;\n")
-    output.write("    xl:provenance "+provenance+" ;\n")
+    output.write("    rdf:type oddb:fact ;\n")
+    output.write("    oddb:provenance "+provenance+" ;\n")
     output.write("    xl:type " + prefix +
                           ":"+etree.QName(fact).localname+" ;\n")
 
@@ -411,6 +411,6 @@ def processSchemaRef(child: etree._Element, provenance: str, params: dict, handl
     schemaRef = schemaRef.replace("eu/eu/", "eu/")
     if schemaRef:
         output.write(handlerPrefix+":schemaRef \n")
-        output.write("    xl:provenance "+provenance+" ;\n")
+        output.write("    oddb:provenance "+provenance+" ;\n")
         output.write("    link:schemaRef <"+schemaRef+"> .\n\n")
     return 0
