@@ -56,7 +56,7 @@ def processContext(context: etree._Element, params: dict, handlerPrefix, provena
     context_id = context.attrib.get('id', None)
     output = params['pagedata']['instance']
     output.write(handlerPrefix+":context_"+context_id+"\n")
-    output.write("    xl:type xbrli:context;\n")
+    output.write("    rdf:type xbrli:context;\n")
     output.write("    oddb:provenance "+provenance+";\n")
     output.write("    xbrli:entity [\n")
      # every context element has one period element
@@ -238,6 +238,7 @@ def processUnit(unit: etree._Element, params: dict, handlerPrefix, provenance) -
           etree.QName(unit_child).localname == "measure"):
         measure = unit_child.text
         output.write(handlerPrefix+":unit_" + unit_id+"\n")
+        output.write("    rdf:type xbrli:unit;\n")
         unitDetails.append("    oddb:provenance "+provenance)
         if ":" in measure:
             unitDetails.append("    xbrli:measure "+measure)
