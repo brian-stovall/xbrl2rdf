@@ -23,23 +23,26 @@ def processInstance(root: etree._Element, base: str, ns: str, params: dict, hand
     footnote_links: list = list()
 
     provenance = genProvenanceName(base, params, handlerPrefix)
-
+    #force processing schemaRef first to combine with instance
     for child in root:
         child_name: str = etree.QName(child).localname
-        # child_namespace = etree.QName(child).namespace
-        if child_name == "context":
-            processContext(child, params, handlerPrefix, provenance)
-        elif child_name == "unit":
-            processUnit(child, params, handlerPrefix, provenance)
-        elif child_name == "schemaRef":
+        if child_name == "schemaRef":
             uri = child.attrib.get(XLINK_HREF, None)
             if uri is None:
                 logging.error("Couldn't identify schema location.")
                 return -1
             processSchemaRef(child, provenance, params, handlerPrefix)
             res = prependDtsQueue(XBRL_SCHEMA, uri, base, ns, 0, params)
+    for child in root:
+        child_name: str = etree.QName(child).localname
+        if child_name == "context":
+            processContext(child, params, handlerPrefix, provenance)
+        elif child_name == "unit":
+            processUnit(child, params, handlerPrefix, provenance)
         elif child_name == "footnoteLink":
             footnote_links.append(child)
+        elif child_name == "schemaRef": #already processed
+            continue
         else:
             child_name = processFact(child, provenance, base, params, handlerPrefix)
 
@@ -167,9 +170,10 @@ def genProvenanceName(base: str, params: dict, handlerPrefix) -> str:
     name: str = handlerPrefix+":provenance"+str(params['provenanceNumber'])
     output.write("# provenance for facts from same filing\n")
     output.write(name+" \n")
+    output.write('    rdf:type oddb0:Provenance;\n')
     output.write('    xlink:href "'+base+'";\n')
     filename = base[base.rfind('/') + 1:]
-    output.write('    xl:instance "'+filename+'".\n\n')
+    output.write('    xlink:title "'+filename+'";\n')
     return name
 
 
@@ -411,7 +415,7 @@ def processSchemaRef(child: etree._Element, provenance: str, params: dict, handl
     schemaRef = child.attrib.get(XLINK_HREF, None)
     schemaRef = schemaRef.replace("eu/eu/", "eu/")
     if schemaRef:
-        output.write(handlerPrefix+":schemaRef \n")
-        output.write("    oddb:provenance "+provenance+" ;\n")
+        #output.write(handlerPrefix+":schemaRef \n")
+        #output.write("    oddb:provenance "+provenance+" ;\n")
         output.write("    link:schemaRef <"+schemaRef+"> .\n\n")
     return 0
